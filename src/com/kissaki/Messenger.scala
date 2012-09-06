@@ -1,16 +1,19 @@
+package com.kissaki
+
 
 /**
  * Akka系の実装ではない、ちょっと残念なMessenger
+ * 
+ * @author sassembla
  */
-package com.kissaki
+
 
 //import akka.actor._
 import scala.actors.Actor._
 import scala.actors._
-
 import java.util.UUID
 import scala.collection.mutable.ListBuffer
-//import scala.collection.JavaConverters._
+import scala.collection.JavaConverters._
 
 //import akka.util.Timeout
 //import akka.dispatch.Await
@@ -36,9 +39,9 @@ case class ParentChildNotDone()
 /*
  * call series
  */
-case class Call(exec : String, message : Array[(String, Any)])
-case class CallMyself(exec : String, message : Array[(String, Any)])
-case class CallParent(exec : String, message : Array[(String, Any)])
+case class Call(exec : String, message : Array[TagValue])
+case class CallMyself(exec : String, message : Array[TagValue])
+case class CallParent(exec : String, message : Array[TagValue])
 
 /*
  * result
@@ -56,7 +59,7 @@ case class Result(result : String)
  *
  * Actorのコントロール/receiverの着火を行う
  */
-class ScalaMessenger (myself : MessengerProtocol, nameInput : String) {
+class Messenger (myself : MessengerProtocol, nameInput : String) {
 
 	val self : MessengerProtocol = myself
 
@@ -69,7 +72,6 @@ class ScalaMessenger (myself : MessengerProtocol, nameInput : String) {
 	val actorImpl = new MessengerActor(self, nameInput)
 	actorImpl.start
 	actorImpl.log += Log.LOG_TYPE_INITIALIZED.toString
-	
 	/*
 	 * シングルトンへのActorの追加
 	 * actorの埋め込み(ActorのLinkみたいなのが出来るといいんだけどね。)
@@ -130,7 +132,10 @@ class ScalaMessenger (myself : MessengerProtocol, nameInput : String) {
 	 */
 	def addLog(input : String) = { actorImpl.log += input }
 	def getLog : ListBuffer[String] = actorImpl.log
-	
+	def getLogAsJava : java.util.List[String] = {
+		actorImpl.log.asJava
+	}
+
 	def getCentralActorSize : Int = {
 		centralActorImpl.actorList.length
 	}
@@ -138,28 +143,28 @@ class ScalaMessenger (myself : MessengerProtocol, nameInput : String) {
 	/**
 	 * 特定の子へとメッセージを飛ばす
 	 */
-	def call(targetName : String, exec : String, message : Array[(String, Any)]) = {
+	def call(targetName : String, exec : String, message : Array[TagValue]) = {
 		actorImpl.call(targetName, exec, message)
 	}
 
 	/**
 	 * 親へとメッセージを飛ばす
 	 */
-	def callParent(exec : String, message : Array[(String, Any)]) = {
+	def callParent(exec : String, message : Array[TagValue]) = {
 		actorImpl.callParent(exec, message)
 	}
 
 	/**
 	 * 自分自身へとメッセージを飛ばす
 	 */
-	def callMyself(exec : String, message : Array[(String, Any)]) {
+	def callMyself(exec : String, message : Array[TagValue]) {
 		actorImpl.callMyself(exec, message)
 	}
 	
 	/**
 	 * tagの一覧を返す
 	 */
-	def tags (tagValues:Array[(String, Any)]) = for ((tag, value) <- tagValues) yield tag
+	def tags (tagValues:Array[TagValue]) = for (tagValue <- tagValues) yield tagValue.getTag
 }
 
 /**
@@ -267,7 +272,7 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 	def parentName : String = parent(0).name
 	def parentId : String = parent(0).id
 
-	def call(targetName : String, exec : String, message : Array[(String, Any)]) = {
+	def call(targetName : String, exec : String, message : Array[TagValue]) = {
 		childList.withFilter(_.name.equals(targetName)).foreach { targetChild =>
 			val future = targetChild !! Call(exec, message)
 			val result = future()
@@ -281,7 +286,7 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 		}
 	}
 
-	def callMyself(exec : String, message : Array[(String, Any)]) = {
+	def callMyself(exec : String, message : Array[TagValue]) = {
 		log += Log.LOG_TYPE_CALLMYSELF.toString
 		val future = this !! CallMyself(exec, message)
 		val result = future()
@@ -292,7 +297,7 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 		}
 	}
 
-	def callParent(exec : String, message : Array[(String, Any)]) = {
+	def callParent(exec : String, message : Array[TagValue]) = {
 		log += Log.LOG_TYPE_CALLPARENT.toString
 		val future = parent(0) !! CallParent(exec, message)
 		val result = future()
@@ -334,7 +339,7 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 				case CallParent(exec, message) => {
 					log += Log.LOG_TYPE_CALLED_AS_PARENT.toString
 					
-//					myself.receiver(exec, message)
+					myself.receiver(exec, message)
 
 					reply(Done("parent called"))
 				}
@@ -353,7 +358,7 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 				case Call(exec, message) => {
 					log += Log.LOG_TYPE_CALLED_AS_CHILD.toString
 						
-//					myself.receiver(exec, message)
+					myself.receiver(exec, message)
 
 					reply(Done("child called"))
 				}
@@ -362,7 +367,7 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 				case CallMyself(exec, message) => {
 					log += Log.LOG_TYPE_CALLED_MYSELF.toString
 
-//					myself.receiver(exec, message)
+					myself.receiver(exec, message)
 
 					reply(Done("myself called"))
 				}

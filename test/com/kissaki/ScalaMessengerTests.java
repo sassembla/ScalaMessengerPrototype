@@ -3,6 +3,8 @@ package com.kissaki;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import junit.framework.TestCase;
 
@@ -10,11 +12,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-//import com.kissaki.ScalaMessenger.MessengerProtocol;
-//import com.kissaki.ScalaMessenger.TagValue;
-//import com.kissaki.ScalaMessenger.ScalaMessenger;
-import com.kissaki.ScalaMessenger;
-
+import com.kissaki.Messenger;
 
 public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 
@@ -30,13 +28,17 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	String TEST_NOTEXIST_PARENT = "TEST_NOTEXIST_PARENT";
 	String TEST_MORE_PARENT = "TEST_MORE_PARENT";
 
+	String TEST_EXEC_CALLMYSELF = "TEST_EXEC_CALLMYSELF";
+	String TEST_EXEC_CALLPARENT = "TEST_EXEC_CALLPARENT";
+	String TEST_EXEC_CALLCHILD = "TEST_EXEC_CALLCHILD";
+	
 	int TEST_TAGVALUE_NUM = 100;
 
 	public String identifier;
 
 	private static final String TEST_SAMPLE = "TEST_SAMPLE";
 
-	ScalaMessenger messenger;
+	MessengerImplement messenger;
 	ParentObject parent;
 	SomeOtherObject someone;
 	private TagValue[] receiverResult = null;
@@ -53,7 +55,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		println("org identifier	" + identifier);
 
 		parent = new ParentObject(TEST_PARENT);
-		messenger = new ScalaMessenger(this, TEST_MESSENGER);
+		messenger = new MessengerImplement(this, TEST_MESSENGER);
 		someone = new SomeOtherObject(TEST_SOMEONE);
 
 		// initialized added
@@ -79,6 +81,44 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	public void receiver(String exec, TagValue[] tagValues) {
 		receiverResult = tagValues;
 		assertNotNull("should not null...", receiverResult);
+
+		if (exec.equals(TEST_EXEC_CALLMYSELF)) {
+			println("到着");
+			messenger.callMyself(TEST_EXEC_CALLMYSELF+1);
+		}
+		if (exec.equals(TEST_EXEC_CALLMYSELF + 1)) {
+			println("到着1");
+			messenger.callMyself(TEST_EXEC_CALLMYSELF+2);
+		}
+		if (exec.equals(TEST_EXEC_CALLMYSELF + 2)) {
+			println("到着2");
+			messenger.callMyself(TEST_EXEC_CALLMYSELF+3);
+		}
+		if (exec.equals(TEST_EXEC_CALLMYSELF + 3)) {
+			println("到着3");
+			messenger.callMyself(TEST_EXEC_CALLMYSELF+4);
+		}
+		if (exec.equals(TEST_EXEC_CALLMYSELF + 4)) {
+			println("到着4");
+			messenger.callMyself(TEST_EXEC_CALLMYSELF+5);
+		}
+		if (exec.equals(TEST_EXEC_CALLMYSELF + 5)) {
+			println("到着5");
+		}
+		
+		
+		if (exec.equals(TEST_EXEC_CALLCHILD)) {
+			println("TEST_EXEC_CALLCHILD");
+			messenger.callParent(TEST_EXEC_CALLPARENT+1);
+		}
+		if (exec.equals(TEST_EXEC_CALLCHILD+1)) {
+			println("TEST_EXEC_CALLCHILD1");
+			messenger.callParent(TEST_EXEC_CALLPARENT+2);
+		}
+		if (exec.equals(TEST_EXEC_CALLCHILD+2)) {
+			println("TEST_EXEC_CALLCHILD2");
+			messenger.callParent(TEST_EXEC_CALLPARENT+3);
+		}
 	}
 
 	/**
@@ -87,16 +127,33 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	 * @author tinoue
 	 */
 	class ParentObject implements MessengerProtocol {
-		ScalaMessenger messenger;
+		MessengerImplement messenger;
 		TagValue[] receiverResult = null;
 
 		public ParentObject(String name) {
-			messenger = new ScalaMessenger(this, name);
+			messenger = new MessengerImplement(this, name);
 		}
 
 		public void receiver(String exec, TagValue[] tagValues) {
 			receiverResult = tagValues;
 			assertNotNull("should not null...", receiverResult);
+			
+			if (exec.equals(TEST_EXEC_CALLPARENT)) {
+				println("TEST_EXEC_CALLPARENT");
+				messenger.call(TEST_MESSENGER, TEST_EXEC_CALLCHILD);
+			}
+			if (exec.equals(TEST_EXEC_CALLPARENT+1)) {
+				println("TEST_EXEC_CALLPARENT1");
+				messenger.call(TEST_MESSENGER, TEST_EXEC_CALLCHILD+1);
+			}
+			if (exec.equals(TEST_EXEC_CALLPARENT+2)) {
+				println("TEST_EXEC_CALLPARENT2");
+				messenger.call(TEST_MESSENGER, TEST_EXEC_CALLCHILD+2);
+			}
+			if (exec.equals(TEST_EXEC_CALLPARENT+3)) {
+				println("TEST_EXEC_CALLPARENT3");
+				messenger.call(TEST_MESSENGER, TEST_EXEC_CALLCHILD+3);
+			}
 		}
 	}
 
@@ -107,10 +164,10 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	 * 
 	 */
 	class SomeOtherObject implements MessengerProtocol {
-		ScalaMessenger messenger;
+		Messenger messenger;
 
 		public SomeOtherObject(String name) {
-			messenger = new ScalaMessenger(this, name);
+			messenger = new Messenger(this, name);
 		}
 
 		public void receiver(String exec, TagValue[] tagValues) {
@@ -139,7 +196,8 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	public void testAddToCentral() {
 		int centralArrayCount = messenger.getCentralArray();
 
-		ScalaMessenger currentMessenger = new ScalaMessenger(this, TEST_SAMPLE);
+		MessengerImplement currentMessenger = new MessengerImplement(this,
+				TEST_SAMPLE);
 
 		// 一人追加すると、centralが持っているリストが少し大きくなる筈
 		assertEquals(centralArrayCount + 1, messenger.getCentralArray());
@@ -151,7 +209,8 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	 */
 	@Test
 	public void testRemoveFromCentral() {
-		ScalaMessenger currentMessenger = new ScalaMessenger(this, TEST_SAMPLE);
+		MessengerImplement currentMessenger = new MessengerImplement(this,
+				TEST_SAMPLE);
 
 		// 足され終わった時点の数値を取得
 		int centralArrayCount = messenger.getCentralArray();
@@ -189,7 +248,8 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		assertTrue("not match log",
 				messenger.getLatestLogItem().equals("LOG_TYPE_CALLED_AS_CHILD"));
 		assertTrue("not match log",
-				parent.messenger.getLatestLogItem().equals("LOG_TYPE_CALLCHILD"));
+				parent.messenger.getLatestLogItem()
+						.equals("LOG_TYPE_CALLCHILD"));
 	}
 
 	@Test
@@ -278,18 +338,18 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	public void testMultiChild() {
 		int childNum = 1000;
 
-		ScalaMessenger currentParent = new ScalaMessenger(this,
+		MessengerImplement currentParent = new MessengerImplement(this,
 				TEST_CURRENT_PARENT);
 
-		ArrayList<ScalaMessenger> currentMessengers = new ArrayList<ScalaMessenger>();
+		ArrayList<MessengerImplement> currentMessengers = new ArrayList<MessengerImplement>();
 
 		// 大量の子どもを作成
 		for (int i = 0; i < childNum; i++)
-			currentMessengers
-					.add(new ScalaMessenger(this, TEST_SAMENAME_CHILD));
+			currentMessengers.add(new MessengerImplement(this,
+					TEST_SAMENAME_CHILD));
 
 		// 親登録
-		for (ScalaMessenger currentMessenger : currentMessengers) {
+		for (MessengerImplement currentMessenger : currentMessengers) {
 			currentMessenger.inputParent(TEST_CURRENT_PARENT);
 		}
 
@@ -303,7 +363,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 				.size());
 
 		// 子どもの側のログ確認(受信分だけ増えているはず)
-		for (ScalaMessenger currentMessenger : currentMessengers) {
+		for (MessengerImplement currentMessenger : currentMessengers) {
 			assertTrue(beforeChildLogSizeStandard + 1 == currentMessenger
 					.getLog().size());
 		}
@@ -315,12 +375,12 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	@Test
 	public void testMultiSameNameParentCandidate() {
 		// 同じ名前の親候補二人
-		ScalaMessenger currentMessenger1 = new ScalaMessenger(this,
+		MessengerImplement currentMessenger1 = new MessengerImplement(this,
 				TEST_SAMENAME_PARENTCANDIDATE);
-		ScalaMessenger currentMessenger2 = new ScalaMessenger(this,
+		MessengerImplement currentMessenger2 = new MessengerImplement(this,
 				TEST_SAMENAME_PARENTCANDIDATE);
 
-		ScalaMessenger child = new ScalaMessenger(this,
+		MessengerImplement child = new MessengerImplement(this,
 				"testMultiSameNameParentCandidate");
 		child.inputParent(TEST_SAMENAME_PARENTCANDIDATE);
 
@@ -335,11 +395,13 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	 */
 	@Test
 	public void testNoParentCandidateExistError() {
-		ScalaMessenger currentMessenger = new ScalaMessenger(this, "currentMessenger");
+		MessengerImplement currentMessenger = new MessengerImplement(this,
+				"currentMessenger");
 		Result result = currentMessenger.inputParent(TEST_NOTEXIST_PARENT);
-		
+
 		assertTrue(result.result().equals(
-				"targetted parent named:"+TEST_NOTEXIST_PARENT+" is not exist. please check parent's name"));
+				"targetted parent named:" + TEST_NOTEXIST_PARENT
+						+ " is not exist. please check parent's name"));
 
 	}
 
@@ -349,9 +411,10 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	@Test
 	public void testOnlyOneParent() {
 		Result result = messenger.inputParent(TEST_MORE_PARENT);
-		
+
 		assertTrue(result.result().equals(
-				messenger.getMessengerName() + " aleady has parent that named " + messenger.getMessengerParentName()));
+				messenger.getMessengerName() + " aleady has parent that named "
+						+ messenger.getMessengerParentName()));
 	}
 
 	/*
@@ -533,4 +596,32 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		assertTrue(str3.equals("good"));
 	}
 
+	/*
+	 * ネストする回数が多いケース
+	 */
+	/**
+	 * 自分自身
+	 */
+	@Test
+	public void testMultiBoundCallMyself() {
+		messenger.callMyself(TEST_EXEC_CALLMYSELF);
+	}
+	
+	//非同期用
+	private CountDownLatch lock = new CountDownLatch(1);
+	
+	
+	/**
+	 * 親→自分→親→、、、
+	 */
+	@Test
+	public void testMultiBoundCallParent_CallChild() {
+		messenger.callParent(TEST_EXEC_CALLPARENT);
+		
+		//非同期ラッチ
+		try {
+			lock.await(1, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {}
+	}
+	
 }
