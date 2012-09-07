@@ -43,6 +43,11 @@ case class Call(exec : String, message : Array[TagValue])
 case class CallMyself(exec : String, message : Array[TagValue])
 case class CallParent(exec : String, message : Array[TagValue])
 
+case class CallWithAsync(exec : String, message : Array[TagValue])
+case class CallMyselfWithAsync(exec : String, message : Array[TagValue])
+case class CallParentWithAsync(exec : String, message : Array[TagValue])
+
+
 /*
  * result
  */
@@ -140,6 +145,7 @@ class Messenger (myself : MessengerProtocol, nameInput : String) {
 		centralActorImpl.actorList.length
 	}
 
+	//同期版
 	/**
 	 * 特定の子へとメッセージを飛ばす
 	 */
@@ -159,6 +165,28 @@ class Messenger (myself : MessengerProtocol, nameInput : String) {
 	 */
 	def callMyself(exec : String, message : Array[TagValue]) {
 		actorImpl.callMyself(exec, message)
+	}
+	
+	//非同期版
+	/**
+	 * 特定の子へと非同期にメッセージを飛ばす
+	 */
+	def callWithAsync(targetName : String, exec : String, message : Array[TagValue]) = {
+		actorImpl.callWithAsync(targetName, exec, message)
+	}
+
+	/**
+	 * 親へと非同期にメッセージを飛ばす
+	 */
+	def callParentWithAsync(exec : String, message : Array[TagValue]) = {
+		actorImpl.callParentWithAsync(exec, message)
+	}
+
+	/**
+	 * 自分自身へと非同期にメッセージを飛ばす
+	 */
+	def callMyselfWithAsync(exec : String, message : Array[TagValue]) {
+		actorImpl.callMyselfWithAsync(exec, message)
 	}
 	
 	/**
@@ -272,15 +300,18 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 	def parentName : String = parent(0).name
 	def parentId : String = parent(0).id
 
+	
+	/**
+	 * 同期系
+	 */
 	def call(targetName : String, exec : String, message : Array[TagValue]) = {
 		childList.withFilter(_.name.equals(targetName)).foreach { targetChild =>
+			log += Log.LOG_TYPE_CALLCHILD.toString
 			val future = targetChild !! Call(exec, message)
 			val result = future()
-
+			
 			result match {
-				case Done(_) => {
-					log += Log.LOG_TYPE_CALLCHILD.toString
-				}
+				case Done(_) => 
 				case Failure(reason) =>
 			}
 		}
@@ -307,7 +338,29 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 			case Failure(reason) =>
 		}
 	}
+	
+	
+	/**
+	 * 非同期系
+	 */
+	def callWithAsync(targetName : String, exec : String, message : Array[TagValue]) = {
+		childList.withFilter(_.name.equals(targetName)).foreach { targetChild =>
+			log += Log.LOG_TYPE_CALLCHILD_ASYNC.toString
+			targetChild !! CallWithAsync(exec, message)
+		}
+	}
 
+	def callMyselfWithAsync(exec : String, message : Array[TagValue]) = {
+		log += Log.LOG_TYPE_CALLMYSELF_ASYNC.toString
+		this !! CallMyselfWithAsync(exec, message)
+	}
+
+	def callParentWithAsync(exec : String, message : Array[TagValue]) = {
+		log += Log.LOG_TYPE_CALLPARENT_ASYNC.toString
+		parent(0) !! CallParentWithAsync(exec, message)
+	}
+
+	//receive
 	def act() = {
 		loop {
 			react {
@@ -343,6 +396,16 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 
 					reply(Done("parent called"))
 				}
+				
+				case CallParentWithAsync(exec, message) => {
+					log += Log.LOG_TYPE_CALLED_AS_PARENT_ASYNC.toString
+					
+					myself.receiver(exec, message)
+					
+					reply(Done("parent-sync called"))
+				}
+				
+				
 
 				//act as child
 				case ParentAccepted(parentActor) => {
@@ -362,6 +425,14 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 
 					reply(Done("child called"))
 				}
+				
+				case CallWithAsync(exec, message) => {
+					log += Log.LOG_TYPE_CALLED_AS_CHILD_ASYNC.toString
+						
+					myself.receiver(exec, message)
+
+					reply(Done("child-sync called"))
+				}
 
 				//act as myself
 				case CallMyself(exec, message) => {
@@ -370,6 +441,18 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 					myself.receiver(exec, message)
 
 					reply(Done("myself called"))
+				}
+				
+				case CallMyselfWithAsync(exec, message) => {
+					println("着てる	"+log.size)
+					log += Log.LOG_TYPE_CALLED_MYSELF_ASYNC.toString
+
+					println("着てる2	"+log.size)
+					
+					
+					myself.receiver(exec, message)
+
+					reply(Done("myself-async called"))
 				}
 
 				
@@ -381,7 +464,6 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 					exit
 				}
 
-				
 				case something : String => {
 					println("不明物が届いた" + something)
 				}

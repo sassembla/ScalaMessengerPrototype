@@ -121,6 +121,33 @@ public class MessengerImplement {
 		messengerImpl.call(target, exec, tagValue);
 	}
 
+	/**
+	 * 自分自身を非同期に呼ぶ
+	 * @param exec
+	 * @param tagValue
+	 */
+	public void callMyselfWithAsync(String exec, TagValue ... tagValue) {
+		messengerImpl.callMyselfWithAsync(exec, tagValue);
+	}
+
+	/**
+	 * 親を非同期に呼ぶ
+	 * @param exec
+	 * @param tagValue
+	 */
+	public void callParentWithAsync(String exec, TagValue ... tagValue) {
+		messengerImpl.callParentWithAsync(exec, tagValue);
+	}
+
+	/**
+	 * 子を非同期に呼ぶ
+	 * @param target
+	 * @param exec
+	 * @param tagValue
+	 */
+	public void callWithAsync(String target, String exec, TagValue ... tagValue) {
+		messengerImpl.callWithAsync(target, exec, tagValue);
+	}
 	
 	
 	/**
