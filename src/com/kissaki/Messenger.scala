@@ -1,26 +1,22 @@
 package com.kissaki
 
-
 /**
  * Akka系の実装ではない、ちょっと残念なMessenger
+ * 0.5.1	12/09/09 0:54:49	ネストの問題を解決。myselfは無限ネストが可能。
+ * 
  * 0.5.0	12/09/08 23:04:15	非同期までの実装完了。
  * 				同期呼び出しはネストすると2ネスト以降でロックする(すでにFutureがセットされているため)
  * 				A1-B1-A2で、A2以降で同期を使うと問題が出る。
  * 
+ *
  * @author sassembla
  */
 
-
-//import akka.actor._
 import scala.actors.Actor._
 import scala.actors._
 import java.util.UUID
 import scala.collection.mutable.ListBuffer
 import scala.collection.JavaConverters._
-
-//import akka.util.Timeout
-//import akka.dispatch.Await
-//import akka.pattern.ask
 
 /*
  * システム系のcase class
@@ -50,7 +46,6 @@ case class CallWithAsync(exec : String, message : Array[TagValue])
 case class CallMyselfWithAsync(exec : String, message : Array[TagValue])
 case class CallParentWithAsync(exec : String, message : Array[TagValue])
 
-
 /*
  * result
  */
@@ -67,7 +62,7 @@ case class Result(result : String)
  *
  * Actorのコントロール/receiverの着火を行う
  */
-class Messenger (myself : MessengerProtocol, nameInput : String) {
+class Messenger(myself : MessengerProtocol, nameInput : String) {
 
 	val self : MessengerProtocol = myself
 
@@ -169,7 +164,7 @@ class Messenger (myself : MessengerProtocol, nameInput : String) {
 	def callMyself(exec : String, message : Array[TagValue]) {
 		actorImpl.callMyself(exec, message)
 	}
-	
+
 	//非同期版
 	/**
 	 * 特定の子へと非同期にメッセージを飛ばす
@@ -191,11 +186,11 @@ class Messenger (myself : MessengerProtocol, nameInput : String) {
 	def callMyselfWithAsync(exec : String, message : Array[TagValue]) {
 		actorImpl.callMyselfWithAsync(exec, message)
 	}
-	
+
 	/**
 	 * tagの一覧を返す
 	 */
-	def tags (tagValues:Array[TagValue]) = for (tagValue <- tagValues) yield tagValue.getTag
+	def tags(tagValues : Array[TagValue]) = for (tagValue <- tagValues) yield tagValue.getTag
 }
 
 /**
@@ -232,7 +227,7 @@ object MessengerCore {
 
 /**
  * 中央Actor
- * 
+ *
  * 全参加Actorはここに追加される
  * actor間の中継を行う
  */
@@ -250,6 +245,7 @@ class MessengerCentral extends Actor {
 					//登録済みのactorの中から、対象を限定してブロードキャストを行う
 					actorList.withFilter(_.name.equals(targetName)).foreach { targetCandidate =>
 						val future = targetCandidate !! ChildInput(childActor)
+
 						val result = future()
 
 						//この時点でとある親と子のやり取りは完了している
@@ -279,7 +275,7 @@ class MessengerCentral extends Actor {
 
 				case m => {
 					println("不可解なメッセージ")
-					reply(Failure("something wrong,, "+m))
+					reply(Failure("something wrong,, " + m))
 				}
 			}
 		}
@@ -303,7 +299,10 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 	def parentName : String = parent(0).name
 	def parentId : String = parent(0).id
 
-	
+	def duplicate : SubMessengerActor = {
+		new SubMessengerActor(this,myself)
+	}
+
 	/**
 	 * 同期系
 	 */
@@ -312,9 +311,9 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 			log += Log.LOG_TYPE_CALLCHILD.toString
 			val future = targetChild !! Call(exec, message)
 			val result = future()
-			
+
 			result match {
-				case Done(_) => 
+				case Done(_) =>
 				case Failure(reason) =>
 			}
 		}
@@ -322,12 +321,14 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 
 	def callMyself(exec : String, message : Array[TagValue]) = {
 		log += Log.LOG_TYPE_CALLMYSELF.toString
-		val future = this !! CallMyself(exec, message)
+		
+		val dup = this.duplicate
+		val future = dup !! CallMyself(exec, message)
 		val result = future()
-
+		
 		result match {
-			case Done(_) =>
-			case Failure(reason) =>
+			case Done(_) => 
+			case Failure(reason) => 
 		}
 	}
 
@@ -341,8 +342,7 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 			case Failure(reason) =>
 		}
 	}
-	
-	
+
 	/**
 	 * 非同期系
 	 */
@@ -394,21 +394,19 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 				}
 				case CallParent(exec, message) => {
 					log += Log.LOG_TYPE_CALLED_AS_PARENT.toString
-					
+
 					myself.receiver(exec, message)
 
 					reply(Done("parent called"))
 				}
-				
+
 				case CallParentWithAsync(exec, message) => {
 					log += Log.LOG_TYPE_CALLED_AS_PARENT_ASYNC.toString
-					
+
 					myself.receiver(exec, message)
-					
+
 					reply(Done("parent-sync called"))
 				}
-				
-				
 
 				//act as child
 				case ParentAccepted(parentActor) => {
@@ -423,15 +421,15 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 				}
 				case Call(exec, message) => {
 					log += Log.LOG_TYPE_CALLED_AS_CHILD.toString
-						
+
 					myself.receiver(exec, message)
 
 					reply(Done("child called"))
 				}
-				
+
 				case CallWithAsync(exec, message) => {
 					log += Log.LOG_TYPE_CALLED_AS_CHILD_ASYNC.toString
-						
+
 					myself.receiver(exec, message)
 
 					reply(Done("child-sync called"))
@@ -439,26 +437,22 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 
 				//act as myself
 				case CallMyself(exec, message) => {
+					println("到着siteru")
 					log += Log.LOG_TYPE_CALLED_MYSELF.toString
 
 					myself.receiver(exec, message)
 
 					reply(Done("myself called"))
 				}
-				
+
 				case CallMyselfWithAsync(exec, message) => {
-					println("着てる	"+log.size)
 					log += Log.LOG_TYPE_CALLED_MYSELF_ASYNC.toString
 
-					println("着てる2	"+log.size)
-					
-					
 					myself.receiver(exec, message)
 
 					reply(Done("myself-async called"))
 				}
 
-				
 				/*
 				 * messengerとしての駆動を終える
 				 */
@@ -469,6 +463,31 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 
 				case something : String => {
 					println("不明物が届いた" + something)
+				}
+			}
+		}
+	}
+
+	/**
+	 * 送信処理の代理人
+	 */
+	class SubMessengerActor(master : MessengerActor, myself:MessengerProtocol) extends Actor {
+		start
+
+		def act() = {
+			loop {
+				react {
+					case CallMyself(exec, message) => {
+						master.log += Log.LOG_TYPE_CALLED_MYSELF.toString
+
+						myself.receiver(exec, message)
+
+						reply(Done("myself called"))
+						exit
+					}
+					case message => {
+						println("hereComes	" + message)
+					}
 				}
 			}
 		}

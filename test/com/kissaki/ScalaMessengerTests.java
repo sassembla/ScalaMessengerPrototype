@@ -90,13 +90,13 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	public void receiver(String exec, TagValue[] tagValues) {
 		receiverResult = tagValues;
 		assertNotNull("should not null...", receiverResult);
-
+		println("はて	"+exec);
 		if (exec.equals(TEST_EXEC_CALLMYSELF)) {
 			println("到着");
 			messenger.callMyself(TEST_EXEC_CALLMYSELF+1);
 		}
 		if (exec.equals(TEST_EXEC_CALLMYSELF + 1)) {
-			println("到着1");
+			println("到着1");//ここまで来れない
 			messenger.callMyself(TEST_EXEC_CALLMYSELF+2);
 		}
 		if (exec.equals(TEST_EXEC_CALLMYSELF + 2)) {
@@ -622,7 +622,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	 */
 	@Test
 	public void testMultiBoundCallMyself() {
-//		messenger.callMyself(TEST_EXEC_CALLMYSELF);
+		messenger.callMyself(TEST_EXEC_CALLMYSELF);
 	}
 	
 	/**
