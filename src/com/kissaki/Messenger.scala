@@ -1,7 +1,8 @@
 package com.kissaki
 
 /**
- * Akka系の実装ではない、ちょっと残念なMessenger
+ * Akka版
+ * 0.0.1	12/09/08 23:00:45	2.9.2 Actors版から書き換えただけ
  *
  * @author sassembla
  */
