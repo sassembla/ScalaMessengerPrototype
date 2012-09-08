@@ -193,6 +193,18 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		}
 	}
 
+	/**
+	 *　初期化条件に関わる内容のテスト
+	 */
+	@Test 
+	public void testInitialize () {
+		println("testInitialize 何もしない");
+	}
+	
+	
+	/**
+	 * 親入力について、設定完了まで進むか
+	 */
 	@Test
 	public void testInputParent() {
 		String parentName = messenger.getMessengerParentName();
@@ -354,7 +366,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	 */
 	@Test
 	public void testMultiChild() {
-		int childNum = 1000;
+		int childNum = 100;
 
 		MessengerImplement currentParent = new MessengerImplement(this,
 				TEST_CURRENT_PARENT);
@@ -622,7 +634,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	 */
 	@Test
 	public void testMultiBoundCallMyself() {
-//		messenger.callMyself(TEST_EXEC_CALLMYSELF);
+		messenger.callMyself(TEST_EXEC_CALLMYSELF);
 	}
 	
 	/**
@@ -630,7 +642,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	 */
 	@Test
 	public void testMultiBoundCallParent_CallChild() {
-//		messenger.callParent(TEST_EXEC_CALLPARENT);
+		messenger.callParent(TEST_EXEC_CALLPARENT);
 	}
 	
 	

@@ -51,7 +51,7 @@ public class MessengerImplement {
 	 * @return
 	 */
 	public String getMessengerName() {
-		return messengerImpl.getName();
+		return messengerImpl.name();
 	}
 	
 	/**
@@ -59,7 +59,7 @@ public class MessengerImplement {
 	 * @return
 	 */
 	public String getMessengerID() {
-		return messengerImpl.getId();
+		return messengerImpl.id();
 	}
 
 	

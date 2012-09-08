@@ -8,3 +8,5 @@
 bin/*
 
 .cache
+
+akka-actor-2.0.2.jar
