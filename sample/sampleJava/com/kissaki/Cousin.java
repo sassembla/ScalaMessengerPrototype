@@ -28,6 +28,7 @@ public class Cousin implements MessengerProtocol {
 	 */
 	@Override
 	public void receiver(String exec, TagValue[] tagValues) {
+		//親(child1か2)からのメッセージを受けたら、折り返す
 		if (exec.equals("grand-mother call you, cousin.")) {
 			System.out.println("あっはいGrand'ma、こちら"+messenger.getMessengerName()+"です、折り返します！");
 			messenger.callParent(
