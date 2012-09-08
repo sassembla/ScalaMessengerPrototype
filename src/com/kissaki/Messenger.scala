@@ -309,7 +309,8 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 	def call(targetName : String, exec : String, message : Array[TagValue]) = {
 		childList.withFilter(_.name.equals(targetName)).foreach { targetChild =>
 			log += Log.LOG_TYPE_CALLCHILD.toString
-			val future = targetChild !! Call(exec, message)
+			
+			val future = targetChild.duplicate !! Call(exec, message)
 			val result = future()
 
 			result match {
@@ -322,8 +323,7 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 	def callMyself(exec : String, message : Array[TagValue]) = {
 		log += Log.LOG_TYPE_CALLMYSELF.toString
 		
-		val dup = this.duplicate
-		val future = dup !! CallMyself(exec, message)
+		val future = this.duplicate !! CallMyself(exec, message)
 		val result = future()
 		
 		result match {
@@ -334,7 +334,7 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 
 	def callParent(exec : String, message : Array[TagValue]) = {
 		log += Log.LOG_TYPE_CALLPARENT.toString
-		val future = parent(0) !! CallParent(exec, message)
+		val future = parent(0).duplicate !! CallParent(exec, message)
 		val result = future()
 
 		result match {
@@ -392,14 +392,6 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 						}
 					}
 				}
-				case CallParent(exec, message) => {
-					log += Log.LOG_TYPE_CALLED_AS_PARENT.toString
-
-					myself.receiver(exec, message)
-
-					reply(Done("parent called"))
-				}
-
 				case CallParentWithAsync(exec, message) => {
 					log += Log.LOG_TYPE_CALLED_AS_PARENT_ASYNC.toString
 
@@ -419,13 +411,6 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 						reply(ChildNotAccepted(this))
 					}
 				}
-				case Call(exec, message) => {
-					log += Log.LOG_TYPE_CALLED_AS_CHILD.toString
-
-					myself.receiver(exec, message)
-
-					reply(Done("child called"))
-				}
 
 				case CallWithAsync(exec, message) => {
 					log += Log.LOG_TYPE_CALLED_AS_CHILD_ASYNC.toString
@@ -436,15 +421,6 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 				}
 
 				//act as myself
-				case CallMyself(exec, message) => {
-					println("到着siteru")
-					log += Log.LOG_TYPE_CALLED_MYSELF.toString
-
-					myself.receiver(exec, message)
-
-					reply(Done("myself called"))
-				}
-
 				case CallMyselfWithAsync(exec, message) => {
 					log += Log.LOG_TYPE_CALLED_MYSELF_ASYNC.toString
 
@@ -477,6 +453,15 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 		def act() = {
 			loop {
 				react {
+					case Call(exec, message) => {
+					master.log += Log.LOG_TYPE_CALLED_AS_CHILD.toString
+
+						myself.receiver(exec, message)
+	
+						reply(Done("child called"))
+						exit
+					}
+					
 					case CallMyself(exec, message) => {
 						master.log += Log.LOG_TYPE_CALLED_MYSELF.toString
 
@@ -485,6 +470,15 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 						reply(Done("myself called"))
 						exit
 					}
+					
+					case CallParent(exec, message) => {
+						master.log += Log.LOG_TYPE_CALLED_AS_PARENT.toString
+	
+						myself.receiver(exec, message)
+	
+						reply(Done("parent called"))
+					}
+					
 					case message => {
 						println("hereComes	" + message)
 					}

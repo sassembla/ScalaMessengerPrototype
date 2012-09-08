@@ -31,7 +31,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	String TEST_EXEC_CALLMYSELF = "TEST_EXEC_CALLMYSELF";
 	String TEST_EXEC_CALLPARENT = "TEST_EXEC_CALLPARENT";
 	String TEST_EXEC_CALLCHILD = "TEST_EXEC_CALLCHILD";
-
+	
 	String TEST_EXEC_CALLMYSELF_ASYNC = "TEST_EXEC_CALLMYSELF_ASYNC";
 	String TEST_EXEC_CALLPARENT_ASYNC = "TEST_EXEC_CALLPARENT_ASYNC";
 	String TEST_EXEC_CALLCHILD_ASYNC = "TEST_EXEC_CALLCHILD_ASYNC";
@@ -90,45 +90,34 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	public void receiver(String exec, TagValue[] tagValues) {
 		receiverResult = tagValues;
 		assertNotNull("should not null...", receiverResult);
-		println("はて	"+exec);
+		
 		if (exec.equals(TEST_EXEC_CALLMYSELF)) {
-			println("到着");
 			messenger.callMyself(TEST_EXEC_CALLMYSELF+1);
 		}
 		if (exec.equals(TEST_EXEC_CALLMYSELF + 1)) {
-			println("到着1");//ここまで来れない
 			messenger.callMyself(TEST_EXEC_CALLMYSELF+2);
 		}
 		if (exec.equals(TEST_EXEC_CALLMYSELF + 2)) {
-			println("到着2");
 			messenger.callMyself(TEST_EXEC_CALLMYSELF+3);
 		}
 		if (exec.equals(TEST_EXEC_CALLMYSELF + 3)) {
-			println("到着3");
 			messenger.callMyself(TEST_EXEC_CALLMYSELF+4);
 		}
 		if (exec.equals(TEST_EXEC_CALLMYSELF + 4)) {
-			println("到着4");
 			messenger.callMyself(TEST_EXEC_CALLMYSELF+5);
 		}
-		if (exec.equals(TEST_EXEC_CALLMYSELF + 5)) {
-			println("到着5");
-		}
+		if (exec.equals(TEST_EXEC_CALLMYSELF + 5)) {}
 		
 		
 		if (exec.equals(TEST_EXEC_CALLCHILD)) {
-			println("TEST_EXEC_CALLCHILD");
 			messenger.callParent(TEST_EXEC_CALLPARENT+1);
 		}
 		if (exec.equals(TEST_EXEC_CALLCHILD+1)) {
-			println("TEST_EXEC_CALLCHILD1");
 			messenger.callParent(TEST_EXEC_CALLPARENT+2);
 		}
 		if (exec.equals(TEST_EXEC_CALLCHILD+2)) {
-			println("TEST_EXEC_CALLCHILD2");
 			messenger.callParent(TEST_EXEC_CALLPARENT+3);
 		}
-		
 		
 		if (exec.equals(TEST_EXEC_CALLCHILD_ASYNC)) {
 			println("TEST_EXEC_CALLCHILD_ASYNC");
@@ -153,19 +142,15 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 			assertNotNull("should not null...", receiverResult);
 			
 			if (exec.equals(TEST_EXEC_CALLPARENT)) {
-				println("TEST_EXEC_CALLPARENT");
 				messenger.call(TEST_MESSENGER, TEST_EXEC_CALLCHILD);
 			}
 			if (exec.equals(TEST_EXEC_CALLPARENT+1)) {
-				println("TEST_EXEC_CALLPARENT1");
 				messenger.call(TEST_MESSENGER, TEST_EXEC_CALLCHILD+1);
 			}
 			if (exec.equals(TEST_EXEC_CALLPARENT+2)) {
-				println("TEST_EXEC_CALLPARENT2");
 				messenger.call(TEST_MESSENGER, TEST_EXEC_CALLCHILD+2);
 			}
 			if (exec.equals(TEST_EXEC_CALLPARENT+3)) {
-				println("TEST_EXEC_CALLPARENT3");
 				messenger.call(TEST_MESSENGER, TEST_EXEC_CALLCHILD+3);
 			}
 			
@@ -616,6 +601,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 
 	/*
 	 * ネストする回数が多いケース
+	 * myself child parentの3パターン x 3バリエーション x n層レイヤー
 	 */
 	/**
 	 * 自分自身
@@ -630,8 +616,9 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	 */
 	@Test
 	public void testMultiBoundCallParent_CallChild() {
-//		messenger.callParent(TEST_EXEC_CALLPARENT);
+		messenger.callParent(TEST_EXEC_CALLPARENT);
 	}
+	
 	
 	
 	/*
