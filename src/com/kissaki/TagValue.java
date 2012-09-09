@@ -4,6 +4,10 @@ import java.util.HashMap;
 
 /**
  * tag-value 
+ * 
+ * Java互換のためにJavaで書かれている。
+ * Scalaだけですむなら別の方法もあるはず。
+ * 
  * @author sassembla
  */
 public class TagValue extends HashMap<String, Object> {

@@ -1,0 +1,50 @@
+apply plugin:"scala"
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.1'
+}
+
+repositories {
+	mavenCentral();
+}
+
+sourceSets {
+	main {
+		scala {
+			srcDir 'src'
+			srcDir 'sample'
+    	}
+	}
+	test {
+		scala {
+			srcDir 'test'
+    	}
+  	}
+}
+
+dependencies {
+	scalaTools  (
+		[group: "org.scala-lang", name: "scala-compiler",version: "2.9.2"],
+		[group: "org.scala-lang", name: "scala-library",version: "2.9.2"],
+	)
+	
+	compile (
+		[group: "org.scala-lang", name: "scala-library",version: "2.9.2"],
+	)
+}
+
+jar {
+	manifest {
+		attributes 'Main-class': "sampleScala.com.kissaki.Main"
+	}
+	
+	from {
+		configurations.runtime.collect {
+			if (it.isDirectory()){
+				it
+			} else {
+				zipTree(it)
+			}
+		}
+	}
+}

@@ -2,12 +2,17 @@ package com.kissaki
 
 /**
  * Akka系の実装ではない、ちょっと残念なMessenger
+ *
+ * 0.5.2	12/09/09 20:43:33	Scala版のサンプルとbuild.gradleを追加
+ * 				gradlew jar でJarのビルドができます。
+ * 				ビルド済みのJarは、	build/libs/の中にあるはず。
+ *
  * 0.5.1	12/09/09 0:54:49	ネストの問題を解決。myselfは無限ネストが可能。
- * 
+ *
  * 0.5.0	12/09/08 23:04:15	非同期までの実装完了。
  * 				同期呼び出しはネストすると2ネスト以降でロックする(すでにFutureがセットされているため)
  * 				A1-B1-A2で、A2以降で同期を使うと問題が出る。
- * 
+ *
  *
  * @author sassembla
  */
@@ -191,6 +196,22 @@ class Messenger(myself : MessengerProtocol, nameInput : String) {
 	 * tagの一覧を返す
 	 */
 	def tags(tagValues : Array[TagValue]) = for (tagValue <- tagValues) yield tagValue.getTag
+
+	/**
+	 * tag-valueのペア
+	 * Array[TagValue]を返す
+	 * (Seqを返すほうが処理少なくていいんだけど。)
+	 */
+	def tagValues(tagValue : TagValue*) = {
+		tagValue.toArray
+	}
+
+	/**
+	 * 値を返す
+	 */
+	def get(tag : String, tagvalues : Array[TagValue]) = {
+		tagvalues.filter(_.m_tag.equals(tag)).foreach(println)
+	}
 }
 
 /**
@@ -300,7 +321,7 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 	def parentId : String = parent(0).id
 
 	def duplicate : SubMessengerActor = {
-		new SubMessengerActor(this,myself)
+		new SubMessengerActor(this, myself)
 	}
 
 	/**
@@ -309,7 +330,7 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 	def call(targetName : String, exec : String, message : Array[TagValue]) = {
 		childList.withFilter(_.name.equals(targetName)).foreach { targetChild =>
 			log += Log.LOG_TYPE_CALLCHILD.toString
-			
+
 			val future = targetChild.duplicate !! Call(exec, message)
 			val result = future()
 
@@ -322,13 +343,13 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 
 	def callMyself(exec : String, message : Array[TagValue]) = {
 		log += Log.LOG_TYPE_CALLMYSELF.toString
-		
+
 		val future = this.duplicate !! CallMyself(exec, message)
 		val result = future()
-		
+
 		result match {
-			case Done(_) => 
-			case Failure(reason) => 
+			case Done(_) =>
+			case Failure(reason) =>
 		}
 	}
 
@@ -447,21 +468,21 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 	/**
 	 * 送信処理の代理人
 	 */
-	class SubMessengerActor(master : MessengerActor, myself:MessengerProtocol) extends Actor {
+	class SubMessengerActor(master : MessengerActor, myself : MessengerProtocol) extends Actor {
 		start
 
 		def act() = {
 			loop {
 				react {
 					case Call(exec, message) => {
-					master.log += Log.LOG_TYPE_CALLED_AS_CHILD.toString
+						master.log += Log.LOG_TYPE_CALLED_AS_CHILD.toString
 
 						myself.receiver(exec, message)
-	
+
 						reply(Done("child called"))
 						exit
 					}
-					
+
 					case CallMyself(exec, message) => {
 						master.log += Log.LOG_TYPE_CALLED_MYSELF.toString
 
@@ -470,15 +491,15 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 						reply(Done("myself called"))
 						exit
 					}
-					
+
 					case CallParent(exec, message) => {
 						master.log += Log.LOG_TYPE_CALLED_AS_PARENT.toString
-	
+
 						myself.receiver(exec, message)
-	
+
 						reply(Done("parent called"))
 					}
-					
+
 					case message => {
 						println("hereComes	" + message)
 					}

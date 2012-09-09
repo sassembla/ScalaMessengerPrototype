@@ -10,3 +10,9 @@ bin/*
 .cache
 
 .DS_Store
+
+.gradle/*
+
+build/*
+
+gradle/*
