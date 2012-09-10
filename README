@@ -1,0 +1,138 @@
+README
+
+
+★What is this? : これはなに？
+Java/Scalaから使用できる、アクターモデルをつかったメッセージ・パッシングを行うライブラリです。
+http://ja.wikipedia.org/wiki/アクターモデル
+
+滅び行くScalaのActors(~2.9.2)をベースにしています。
+ブランチakkanized にAkka版を用意中です。
+
+
+
+
+
+
+★Motivation : モチベーション
+メッセージ・パッシングをJava/Scalaでもやりたかった、
+ポインタ所持以外での伝達法を使って処理を纏めたかった、
+意味論的な名付けを行いたかった。
+
+
+
+
+
+
+★How to use : どうやって使うの
+サンプルを用意しました。
+
+sample/sampleJava/~
+sample/sampleScala/~
+を参考にしてください。
+
+
+両方とも同じ構造をしており、
+Mainを起動すると、下記のポインタ所持関係を作ります。
+
+<Object-owning>
+Main -> Parent parent, named "parent"
+				|-> Child child1, named "child"
+				|	
+				|-> Child child2, named "child"
+				|	
+				|-> Cousin cousin, named "cousin"
+
+
+対して、メッセージパッシングのルートは下記の関係を作ります。
+
+<Message-passing>
+parent
+	|--> child1
+	|	  |-->cousin
+	|
+	|--> child2
+		
+
+直接接続している間柄のみ、メッセージパッシングでのオブジェクト送付が可能です。
+	○	parent	->	child1,child2
+	×	parent	->	cousin
+	○	child1	->	cousin
+
+
+
+
+
+
+★How to build : ビルドし方 (ONLY SCALA)
+In Terminal,
+:gradlew scalaJar
+->
+	build/libs/ScalaMessengerPrototype.jar
+
+	you can run it.
+
+
+
+
+
+
+★Why ruled : なんで制限あるの
+自由にオブジェクト間でメッセージが送れると混乱するので、コードで記述可能な制限を設けています。
+
+messenger = new Messenger(this, "child")
+messenger.inputParent("parent")
+
+とした場合、”parent"と名付けられたMessengerを持つオブジェクトが「親」になります。
+親に該当するMessengerがJVM内にいるかどうか、childが探しにいき、
+親が見つかればその時点で親子関係を結びます。
+
+複数の親候補が見つかった場合、生成順で優先度が決まり、必ずただ一人の親を持ちます。
+
+親は、同一の名前の子を複数持つことが出来ます。
+
+子は、一人だけ親を持つことが出来ます。
+
+親は、複数の同名の子に向けてブロードキャストを行うことが出来ます。
+	messenger.call("child", "execution", null)
+
+子は、親に対してメッセージを投げることが出来ます。
+	messenger.callParent("execution", null)
+
+自分自身にメッセージを投げることが出来ます。
+	messenger.callMyself("execution", null)
+
+メッセージは相手のreceiverメソッドに到達します。
+	def receiver(exec:String, tagValues:Array[TagValue]) = {
+		//reach here
+	}
+
+メッセージには、タイトル文字列:exec　と、
+オブジェクトのHashMapである tag & value の配列:tagValues	を渡すことが出来ます。
+	
+	messenger.callMyself("execution", messenger.tagValues(new TagValue("tag","value")))
+
+	可変長です。
+	messenger.callMyself("execution", 
+		messenger.tagValues(	new TagValue("tag1","value1"),
+							new TagValue("tag2","value2")
+		)
+	)
+	
+受け取り側で、値を受け取ることが出来ます。
+	参照渡しも可能(Javaの場合キャストが必要)
+	
+	<send: from class "Something">
+	messenger.callMyself("execution", 
+			messenger.tagValues(new TagValue("tag", this )
+		)
+	)
+	
+	<receive:in class "Else">
+	receiver {
+		(case Java)
+		Something something = (Something)messenger.get("tag", tagValues);
+
+		(case Scala)
+		val something = messenger.get("tag", tagValues)
+	}
+
