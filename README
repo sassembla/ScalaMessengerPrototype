@@ -65,7 +65,7 @@ parent
 
 ★How to build : ビルドし方 (ONLY SCALA)
 In Terminal,
-:gradlew scalaJar
+:gradlew jar
 ->
 	build/libs/ScalaMessengerPrototype.jar
 
