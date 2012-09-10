@@ -24,7 +24,7 @@ class Child(masterName : String) extends MessengerProtocol {
 	/**
 	 * Childのレシーバ
 	 */
-	def receiver(exec : String, tagValues : Array[TagValue]) {
+	def receiver(exec : String, tagValues : Array[TagValue]) = {
 
 		// parentから呼ばれた
 		if (exec.equals("callFromParent")) {

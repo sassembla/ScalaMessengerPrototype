@@ -23,7 +23,7 @@ class Cousin extends MessengerProtocol {
 	/**
 	 * 孫のレシーバ
 	 */
-	def receiver(exec : String, tagValues : Array[TagValue]) {
+	def receiver(exec : String, tagValues : Array[TagValue]) = {
 		//親(child1か2)からのメッセージを受けたら、折り返す
 		if (exec.equals("grand-mother call you, cousin.")) {
 			println("あっはいGrand'ma、こちら" + messenger.getName + "です、折り返します！")

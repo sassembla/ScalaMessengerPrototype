@@ -11,14 +11,14 @@ import com.kissaki.Messenger
  *
  */
 class Parent extends MessengerProtocol {
-
-	// 子ども
+	
 	val messenger = new Messenger(this, "parent")
 
-	// 孫
+	// 子ども
 	val child1 = new Child(messenger.getName)
 	val child2 = new Child(messenger.getName)
 
+	// 孫
 	val cousin1 = new Cousin()
 
 	// child1,2へとブロードキャスト
@@ -32,7 +32,7 @@ class Parent extends MessengerProtocol {
 	/**
 	 * parentのレシーバ
 	 */
-	def receiver(exec : String, tagValues : Array[TagValue]) {
+	def receiver(exec : String, tagValues : Array[TagValue]) = {
 		if (exec.equals("to grand'ma from cousin")) {
 			val message = messenger.get("message", tagValues)
 			println("cousinからのmessageは、	\"" + message + "\"	です。")
