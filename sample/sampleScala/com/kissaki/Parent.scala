@@ -28,14 +28,18 @@ class Parent extends MessengerProtocol {
 	messenger.call("child", "callCousin",
 		messenger.tagValues(new TagValue("parentName", messenger.getName))
 		)
-
+		
 	/**
 	 * parentのレシーバ
 	 */
 	def receiver(exec : String, tagValues : Array[TagValue]) = {
-		if (exec.equals("to grand'ma from cousin")) {
-			val message = messenger.get("message", tagValues)
-			println("cousinからのmessageは、	\"" + message + "\"	です。")
+		exec match {
+			case "to grand'ma from cousin" => {
+				val message = messenger.get("message", tagValues)
+				println("cousinからのmessageは、	\"" + message + "\"	です。")
+			}
 		}
 	}
 }
+
+

@@ -24,12 +24,15 @@ class Cousin extends MessengerProtocol {
 	 * 孫のレシーバ
 	 */
 	def receiver(exec : String, tagValues : Array[TagValue]) = {
-		//親(child1か2)からのメッセージを受けたら、折り返す
-		if (exec.equals("grand-mother call you, cousin.")) {
-			println("あっはいGrand'ma、こちら" + messenger.getName + "です、折り返します！")
-			messenger.callParent(
-				"forward to grand'ma",
-				messenger.tagValues(new TagValue("message", "落ち込んだりもしたけれど、" + messenger.getName + "は元気です")))
+		exec match {
+			//親(child1か2)からのメッセージを受けたら、折り返す
+			case "grand-mother call you, cousin." => {
+				println("あっはいGrand'ma、こちら" + messenger.getName + "です、折り返します！")
+				messenger.callParent(
+					"forward to grand'ma",
+					messenger.tagValues(new TagValue("message", "落ち込んだりもしたけれど、" + messenger.getName + "は元気です")))
+			}
+
 		}
 	}
 }
