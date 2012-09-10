@@ -13,6 +13,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.kissaki.Messenger;
+import com.kissaki.MessengerProtocol;
+import com.kissaki.MessengerWrapper;
+import com.kissaki.Result;
+import com.kissaki.TagValue;
 
 public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 
@@ -47,7 +51,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	private CountDownLatch lock = new CountDownLatch(1);
 	
 
-	MessengerImplement messenger;
+	MessengerWrapper messenger;
 	ParentObject parent;
 	SomeOtherObject someone;
 	private TagValue[] receiverResult = null;
@@ -64,7 +68,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		println("org identifier	" + identifier);
 
 		parent = new ParentObject(TEST_PARENT);
-		messenger = new MessengerImplement(this, TEST_MESSENGER);
+		messenger = new MessengerWrapper(this, TEST_MESSENGER);
 		someone = new SomeOtherObject(TEST_SOMEONE);
 
 		// initialized added
@@ -130,11 +134,11 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	 * @author sassembla
 	 */
 	class ParentObject implements MessengerProtocol {
-		MessengerImplement messenger;
+		MessengerWrapper messenger;
 		TagValue[] receiverResult = null;
 
 		public ParentObject(String name) {
-			messenger = new MessengerImplement(this, name);
+			messenger = new MessengerWrapper(this, name);
 		}
 
 		public void receiver(String exec, TagValue[] tagValues) {
@@ -199,7 +203,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	public void testAddToCentral() {
 		int centralArrayCount = messenger.getCentralArray();
 
-		MessengerImplement currentMessenger = new MessengerImplement(this,
+		MessengerWrapper currentMessenger = new MessengerWrapper(this,
 				TEST_SAMPLE);
 
 		// 一人追加すると、centralが持っているリストが少し大きくなる筈
@@ -212,7 +216,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	 */
 	@Test
 	public void testRemoveFromCentral() {
-		MessengerImplement currentMessenger = new MessengerImplement(this,
+		MessengerWrapper currentMessenger = new MessengerWrapper(this,
 				TEST_SAMPLE);
 
 		// 足され終わった時点の数値を取得
@@ -341,18 +345,18 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	public void testMultiChild() {
 		int childNum = 1000;
 
-		MessengerImplement currentParent = new MessengerImplement(this,
+		MessengerWrapper currentParent = new MessengerWrapper(this,
 				TEST_CURRENT_PARENT);
 
-		ArrayList<MessengerImplement> currentMessengers = new ArrayList<MessengerImplement>();
+		ArrayList<MessengerWrapper> currentMessengers = new ArrayList<MessengerWrapper>();
 
 		// 大量の子どもを作成
 		for (int i = 0; i < childNum; i++)
-			currentMessengers.add(new MessengerImplement(this,
+			currentMessengers.add(new MessengerWrapper(this,
 					TEST_SAMENAME_CHILD));
 
 		// 親登録
-		for (MessengerImplement currentMessenger : currentMessengers) {
+		for (MessengerWrapper currentMessenger : currentMessengers) {
 			currentMessenger.inputParent(TEST_CURRENT_PARENT);
 		}
 
@@ -366,7 +370,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 				.size());
 
 		// 子どもの側のログ確認(受信分だけ増えているはず)
-		for (MessengerImplement currentMessenger : currentMessengers) {
+		for (MessengerWrapper currentMessenger : currentMessengers) {
 			assertTrue(beforeChildLogSizeStandard + 1 == currentMessenger
 					.getLog().size());
 		}
@@ -378,12 +382,12 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	@Test
 	public void testMultiSameNameParentCandidate() {
 		// 同じ名前の親候補二人
-		MessengerImplement currentMessenger1 = new MessengerImplement(this,
+		MessengerWrapper currentMessenger1 = new MessengerWrapper(this,
 				TEST_SAMENAME_PARENTCANDIDATE);
-		MessengerImplement currentMessenger2 = new MessengerImplement(this,
+		MessengerWrapper currentMessenger2 = new MessengerWrapper(this,
 				TEST_SAMENAME_PARENTCANDIDATE);
 
-		MessengerImplement child = new MessengerImplement(this,
+		MessengerWrapper child = new MessengerWrapper(this,
 				"testMultiSameNameParentCandidate");
 		child.inputParent(TEST_SAMENAME_PARENTCANDIDATE);
 
@@ -398,7 +402,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	 */
 	@Test
 	public void testNoParentCandidateExistError() {
-		MessengerImplement currentMessenger = new MessengerImplement(this,
+		MessengerWrapper currentMessenger = new MessengerWrapper(this,
 				"currentMessenger");
 		Result result = currentMessenger.inputParent(TEST_NOTEXIST_PARENT);
 
@@ -430,12 +434,12 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	 */
 	@Test
 	public void testGetTags() {
-		messenger.callMyself(TEST_EXEC, messenger.TagValue("tag0", this),
-				messenger.TagValue("tag1", "messenger"),
-				messenger.TagValue("tag2", 2),
-				messenger.TagValue("tag3", true),
-				messenger.TagValue("tag4", 1000),
-				messenger.TagValue("tag5", "good"));
+		messenger.callMyself(TEST_EXEC, messenger.tagValue("tag0", this),
+				messenger.tagValue("tag1", "messenger"),
+				messenger.tagValue("tag2", 2),
+				messenger.tagValue("tag3", true),
+				messenger.tagValue("tag4", 1000),
+				messenger.tagValue("tag5", "good"));
 
 		// receiverに値が入る
 		assertNotNull("should not null...", receiverResult);
@@ -559,12 +563,12 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		String str_messenger = "messenger";
 		int int_1000 = 1000;
 
-		messenger.callMyself(TEST_EXEC, messenger.TagValue("tag0", this),
-				messenger.TagValue("tag1", str_messenger),
-				messenger.TagValue("tag2", 2),
-				messenger.TagValue("tag3", true),
-				messenger.TagValue("tag4", int_1000),
-				messenger.TagValue("tag5", "good"));
+		messenger.callMyself(TEST_EXEC, messenger.tagValue("tag0", this),
+				messenger.tagValue("tag1", str_messenger),
+				messenger.tagValue("tag2", 2),
+				messenger.tagValue("tag3", true),
+				messenger.tagValue("tag4", int_1000),
+				messenger.tagValue("tag5", "good"));
 
 		// receiverに値が入る
 		assertNotNull("should not null...", receiverResult);

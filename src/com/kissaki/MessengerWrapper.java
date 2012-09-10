@@ -11,7 +11,7 @@ import java.util.List;
  * @author sassembla
  *
  */
-public class MessengerImplement {
+public class MessengerWrapper {
 	final Messenger messengerImpl;
 	
 	/**
@@ -19,7 +19,7 @@ public class MessengerImplement {
 	 * @param master
 	 * @param messengerName
 	 */
-	public MessengerImplement(MessengerProtocol master, String messengerName) {
+	public MessengerWrapper(MessengerProtocol master, String messengerName) {
 		messengerImpl = new Messenger(master, messengerName);
 	}
 
@@ -156,7 +156,7 @@ public class MessengerImplement {
 	 * @param value
 	 * @return
 	 */
-	public TagValue TagValue(String tag, Object value) {
+	public TagValue tagValue(String tag, Object value) {
 		return new TagValue(tag, value);
 	}
 	

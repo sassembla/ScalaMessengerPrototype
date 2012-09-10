@@ -10,6 +10,7 @@ package sampleScala.com.kissaki;
 object Main {
 
 	def main(args : Array[String]) : Unit = {
+		println("scala version")
 		new Parent();
 	}
 

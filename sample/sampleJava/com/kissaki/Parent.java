@@ -1,6 +1,6 @@
 package sampleJava.com.kissaki;
 
-import com.kissaki.MessengerImplement;
+import com.kissaki.MessengerWrapper;
 import com.kissaki.MessengerProtocol;
 import com.kissaki.TagValue;
 
@@ -11,7 +11,7 @@ import com.kissaki.TagValue;
  * 
  */
 public class Parent implements MessengerProtocol {
-	MessengerImplement messenger;
+	MessengerWrapper messenger;
 
 	// 子ども
 	Child child1;
@@ -21,7 +21,7 @@ public class Parent implements MessengerProtocol {
 	Cousin cousin1;
 
 	public Parent() {
-		messenger = new MessengerImplement(this, "parent");
+		messenger = new MessengerWrapper(this, "parent");
 
 		child1 = new Child(messenger.getMessengerName());
 		child2 = new Child(messenger.getMessengerName());

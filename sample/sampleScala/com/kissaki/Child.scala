@@ -1,6 +1,5 @@
 package sampleScala.com.kissaki
 
-import com.kissaki.MessengerImplement
 import com.kissaki.MessengerProtocol
 import com.kissaki.TagValue
 import com.kissaki.Messenger

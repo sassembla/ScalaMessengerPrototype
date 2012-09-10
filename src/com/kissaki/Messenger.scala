@@ -210,7 +210,8 @@ class Messenger(myself : MessengerProtocol, nameInput : String) {
 	 * 値を返す
 	 */
 	def get(tag : String, tagvalues : Array[TagValue]) = {
-		tagvalues.filter(_.m_tag.equals(tag)).foreach(println)
+		val ret = for (tagValue <- tagvalues.withFilter(_.m_tag.equals(tag)) ) yield tagValue.get(tag)
+		ret(0)
 	}
 }
 
