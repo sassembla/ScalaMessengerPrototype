@@ -397,21 +397,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		assertTrue((result1 && !result2) || (!result1 && result2));
 	}
 
-	/**
-	 * 存在しない親を指定するとエラー
-	 */
-	@Test
-	public void testNoParentCandidateExistError() {
-		MessengerWrapper currentMessenger = new MessengerWrapper(this,
-				"currentMessenger");
-		Result result = currentMessenger.inputParent(TEST_NOTEXIST_PARENT);
-
-		assertTrue(result.result().equals(
-				"targetted parent named:" + TEST_NOTEXIST_PARENT
-						+ " is not exist. please check parent's name"));
-
-	}
-
+	
 	/**
 	 * 親は最大一人、複数の親を指定しようとするとエラー
 	 */
@@ -423,6 +409,21 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 				messenger.getMessengerName() + " aleady has parent that named "
 						+ messenger.getMessengerParentName()));
 	}
+	
+	/**
+	 * 存在しない親を指定するとエラー
+	 */
+	@Test
+	public void testNoParentCandidateExistError() {
+		MessengerWrapper currentMessenger = new MessengerWrapper(this,
+				"currentMessenger");
+		Result result = currentMessenger.inputParent(TEST_NOTEXIST_PARENT);
+		assertTrue(result.result().equals(
+				"targetted parent named:" + TEST_NOTEXIST_PARENT
+						+ " is not exist. please check parent's name"));
+
+	}
+
 
 	/*
 	 * タグバリュー
@@ -603,8 +604,11 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		assertTrue(str3.equals("good"));
 	}
 
+	/**
+	 * 子どもがcloseするときに親からの解除
+	 */
 	@Test
-	public void testCloseAndReleaseFromParent () {
+	public void testCloseAndRemoveFromParent () {
 		
 		int childNum = parent.messenger.getChildNum();
 		
@@ -613,6 +617,21 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		//一件子どもの数が減っている
 		assertTrue(childNum - 1 == parent.messenger.getChildNum());
 	}
+	
+	/**
+	 * 親がcloseするときに子どもからの解除
+	 */
+	@Test
+	public void testCloseAndRemoveFromChild () {
+		//まだ親が居る
+		assertTrue(messenger.hasParent());
+		
+		parent.messenger.close();
+		
+		//子どもは親が居ない
+		assertFalse(messenger.hasParent());
+	}
+	
 	
 	/*
 	 * ネストする回数が多いケース

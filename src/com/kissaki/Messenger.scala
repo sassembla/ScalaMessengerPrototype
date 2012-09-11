@@ -40,6 +40,7 @@ case class ChildNotAccepted(child : MessengerActor)
 case class ParentChildDone()
 case class ParentChildNotDone()
 case class RemoveFromParent(myself : MessengerActor)
+case class RemoveFromChild(myself : MessengerActor)
 
 /*
  * call series
@@ -92,9 +93,14 @@ class Messenger(myself : MessengerProtocol, nameInput : String) {
 	 * このMessengerを閉じる
 	 */
 	def close {
-		val future = actorImpl.parent(0) !! RemoveFromParent(actorImpl)
-		val result = future()
-		println("here")
+		if (hasParent) {
+			actorImpl.removeFromParent
+		}
+		
+		if (hasChild) {
+			actorImpl.removeFromChild
+		} 
+		
 		val future1 = centralActorImpl !! MessengerRemove(actorImpl)
 		val result1 = future1()
 
@@ -330,6 +336,28 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 	def duplicate : SubMessengerActor = {
 		new SubMessengerActor(this, myself)
 	}
+	
+	/**
+	 * 親からの離脱
+	 */
+	def removeFromParent = {
+		val future = parent(0) !! RemoveFromParent(this)
+		val result = future()
+	}
+	
+	def removeFromChild = {
+		childList.foreach { targetChild =>
+			val future = targetChild.duplicate !! RemoveFromChild(this)
+			val result = future()
+			
+			result match {
+				case Done(_) =>
+				case Failure(reason) =>
+			}
+		}
+	}
+	
+	
 
 	/**
 	 * 同期系
@@ -458,6 +486,7 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 				}
 
 				case RemoveFromParent(id) => {
+					log += Log.LOG_TYPE_REMOVE_CHILD.toString
 					childList -= id
 					reply(Done("child-removed"))
 				}
@@ -512,7 +541,13 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 
 						reply(Done("parent called"))
 					}
-
+					
+					case RemoveFromChild(id) => {
+						master.log += Log.LOG_TYPE_REMOVE_PARENT.toString
+						parent -= id
+						reply(Done("parent-removed"))
+					}
+					
 					case message => {
 						println("hereComes	" + message)
 					}
