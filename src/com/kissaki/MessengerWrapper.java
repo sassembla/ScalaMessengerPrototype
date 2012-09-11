@@ -297,6 +297,14 @@ public class MessengerWrapper {
 		return messengerImpl.tags(tagValues); 
 	}
 
+	/**
+	 * 子どもの数を得る
+	 * @return
+	 */
+	public int getChildNum() {
+		return messengerImpl.getChildNum();
+	}
+
 	
 	public void println(String print) {
 		System.out.println(print);

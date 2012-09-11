@@ -39,6 +39,7 @@ case class ChildAccepted(child : MessengerActor)
 case class ChildNotAccepted(child : MessengerActor)
 case class ParentChildDone()
 case class ParentChildNotDone()
+case class RemoveFromParent(myself : MessengerActor)
 
 /*
  * call series
@@ -91,8 +92,11 @@ class Messenger(myself : MessengerProtocol, nameInput : String) {
 	 * このMessengerを閉じる
 	 */
 	def close {
-		val future = centralActorImpl !! MessengerRemove(actorImpl)
+		val future = actorImpl.parent(0) !! RemoveFromParent(actorImpl)
 		val result = future()
+		println("here")
+		val future1 = centralActorImpl !! MessengerRemove(actorImpl)
+		val result1 = future1()
 
 		val future2 = actorImpl !! World.WORLD_MESSAGE_MEMBER_EXIT
 		val result2 = future2()
@@ -114,6 +118,8 @@ class Messenger(myself : MessengerProtocol, nameInput : String) {
 	def hasChild : Boolean = !actorImpl.childList.isEmpty
 	def hasParent : Boolean = !actorImpl.parent.isEmpty
 
+	def getChildNum = actorImpl.childList.size
+	
 	/**
 	 * 親の名前入力
 	 */
@@ -451,6 +457,12 @@ class MessengerActor(myself : MessengerProtocol, inputtedName : String) extends 
 					reply(Done("myself-async called"))
 				}
 
+				case RemoveFromParent(id) => {
+					childList -= id
+					reply(Done("child-removed"))
+				}
+					
+				
 				/*
 				 * messengerとしての駆動を終える
 				 */

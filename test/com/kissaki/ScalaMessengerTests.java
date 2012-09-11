@@ -603,6 +603,17 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		assertTrue(str3.equals("good"));
 	}
 
+	@Test
+	public void testCloseAndReleaseFromParent () {
+		
+		int childNum = parent.messenger.getChildNum();
+		
+		messenger.close();
+		
+		//一件子どもの数が減っている
+		assertTrue(childNum - 1 == parent.messenger.getChildNum());
+	}
+	
 	/*
 	 * ネストする回数が多いケース
 	 * myself child parentの3パターン x 3バリエーション x n層レイヤー
@@ -677,5 +688,6 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		assertTrue("parent not match	" + parent.messenger.getLog().size(),
 				parentLogNum + 1 == parent.messenger.getLog().size());
 	}
+	
 	
 }
