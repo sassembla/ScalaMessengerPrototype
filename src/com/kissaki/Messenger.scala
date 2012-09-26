@@ -2,7 +2,9 @@ package com.kissaki
 
 /**
  * Akka系の実装ではない、ちょっと残念なMessenger
- *
+ * 0.5.3	12/09/26 22:48:00	asyncでの指定時間遅延が実行可能
+ * 				非同期系を使う際、外界をロックせずに指定時間後のコード実行予約が可能。
+ * 
  * 0.5.2	12/09/09 20:43:33	Scala版のサンプルとbuild.gradleを追加
  * 				gradlew jar でJarのビルドができます。
  * 				ビルド済みのJarは、	build/libs/の中にあるはず。
