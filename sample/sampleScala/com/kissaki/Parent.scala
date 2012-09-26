@@ -20,7 +20,7 @@ class Parent extends MessengerProtocol {
 
 	// 孫
 	val cousin1 = new Cousin()
-
+	
 	// child1,2へとブロードキャスト
 	messenger.call("child", "callFromParent", null)
 
@@ -28,6 +28,10 @@ class Parent extends MessengerProtocol {
 	messenger.call("child", "callCousin",
 		messenger.tagValues(new TagValue("parentName", messenger.getName))
 		)
+	
+		
+	//遅延実行
+	messenger.callWithAsync("child", "please wake me up 1Sec later", null);
 		
 	/**
 	 * parentのレシーバ
@@ -37,6 +41,11 @@ class Parent extends MessengerProtocol {
 			case "to grand'ma from cousin" => {
 				val message = messenger.get("message", tagValues)
 				println("cousinからのmessageは、	\"" + message + "\"	です。")
+			}
+			
+			case "WAKE UP!" => {
+				val senderId = messenger.get("childId", tagValues).asInstanceOf[String]
+				println("thank you,	"+senderId)
 			}
 		}
 	}

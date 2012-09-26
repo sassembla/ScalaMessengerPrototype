@@ -34,6 +34,9 @@ public class Parent implements MessengerProtocol {
 		// child1を介してcousin1の呼び出し
 		messenger.call("child", "callCousin",
 				messenger.tagValue("parentName", messenger.getMessengerName()));
+		
+		
+		messenger.callWithAsync("child", "please wake me up 1Sec later");
 	}
 
 	/**
@@ -44,6 +47,11 @@ public class Parent implements MessengerProtocol {
 		if (exec.equals("to grand'ma from cousin")) {
 			String message = messenger.getStr("message", tagValues);
 			System.out.println("cousinからのmessageは、	\"" + message + "\"	です。");
+		}
+		
+		if (exec.equals("WAKE UP!")) {
+			String senderId = messenger.getStr("childId", tagValues);
+			System.out.println("thank you,	"+senderId);
 		}
 	}
 }

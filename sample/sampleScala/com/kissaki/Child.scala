@@ -46,6 +46,13 @@ class Child(masterName : String) extends MessengerProtocol {
 			case "forward to grand'ma" => {
 				messenger.callParent("to grand'ma from cousin", tagValues)
 			}
+			
+			//parentから、1秒後に起こせと言われた
+			case "please wake me up 1Sec later" => {
+				//1秒待ちます(この間別のMessagingを行っても問題なく動きます)
+				Thread.sleep(1000)
+				messenger.callParent("WAKE UP!", messenger.tagValues(new TagValue("childId", messenger.getId)))
+			}
 		}
 
 	}

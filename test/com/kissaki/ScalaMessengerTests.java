@@ -50,9 +50,9 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	String TEST_DELAY_AWAKE = "TEST_DELAY_AWAKE";
 	String TEST_DELAYED_CALLPARENT = "TEST_DELAYED_CALLPARENT";
 	int TEST_DELAY_DURATION = 1000;
-	
+
 	ArrayList<String> globalLog;
-	
+
 	int TEST_TAGVALUE_NUM = 100;
 
 	public String identifier;
@@ -67,8 +67,6 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	SomeOtherObject someone;
 	private TagValue[] receiverResult = null;
 
-	
-	
 	public void println(String s) {
 		System.out.println(s);
 	}
@@ -78,7 +76,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		int rand = new Random().nextInt();
 		identifier = "rand_" + rand;
 
-		println("test identifier	" + identifier+"	/testName	"+this);
+		println("test identifier	" + identifier + "	/testName	" + this);
 
 		parent = new ParentObject(TEST_PARENT);
 		messenger = new MessengerWrapper(this, TEST_MESSENGER);
@@ -176,18 +174,18 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		// async-myself-delay
 		if (exec.equals(TEST_DELAY)) {
 			globalLog.add(TEST_DELAY);
-			
+
 			try {
 				Thread.sleep(TEST_DELAY_DURATION);
 			} catch (InterruptedException e) {
-				println("InterruptedException	"+e);
+				println("InterruptedException	" + e);
 			}
-			
+
 			globalLog.add(TEST_DELAY_AWAKE);
-			
+
 			messenger.callParent(TEST_DELAYED_CALLPARENT);
 		}
-		
+
 		if (exec.equals(TEST_DELAY_AFTER)) {
 			globalLog.add(TEST_DELAY_AFTER);
 		}
@@ -245,19 +243,19 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 				messenger.callWithAsync(TEST_MESSENGER,
 						TEST_EXEC_CALLCHILD_ASYNC_NEST + 3);
 			}
-			
+
 			if (exec.equals(TEST_DELAYED_CALLPARENT)) {
 				globalLog.add(TEST_DELAYED_CALLPARENT);
 			}
-			
+
 			if (exec.equals(TEST_PARENT_DELAY)) {
-				
+
 				try {
 					Thread.sleep(TEST_DELAY_DURATION);
 				} catch (InterruptedException e) {
-					println("InterruptedException	"+e);
+					println("InterruptedException	" + e);
 				}
-				
+
 				messenger.call(TEST_MESSENGER, TEST_DELAY);
 			}
 		}
@@ -865,7 +863,6 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 				parentLogNum + 8 == parent.messenger.getLog().size());
 	}
 
-	
 	/**
 	 * 遅延実行
 	 * 
@@ -874,24 +871,24 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	@Test
 	public void testCallMyselfWithAsyncDelay() {
 		globalLog = new ArrayList<String>();
-		
+
 		int before = parent.messenger.getLog().size();
-		
+
 		// 非同期の先のThreadでsleepすると、非同期で抜けつつ、時間が来たら返事を返す、というような事が出来る。
 		messenger.callMyselfWithAsync(TEST_DELAY);
-		
+
 		// 非同期ラッチ
 		try {
 			lock.await(2, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 		}
-		
-		//親にひとつメッセージが届いている
+
+		// 親にひとつメッセージが届いている
 		assertTrue("parent not match	" + parent.messenger.getLog().size(),
 				before + 1 == parent.messenger.getLog().size());
 		globalLog = null;
 	}
-	
+
 	/**
 	 * 親から子への非同期遅延 > 子から親への非同期遅延
 	 */
@@ -899,83 +896,85 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	public void testCallParentWithAsyncDelay() {
 		globalLog = new ArrayList<String>();
 		int before = messenger.getLog().size();
-		
+
 		// 非同期の先のThreadでsleepすると、非同期で抜けつつ、時間が来たら返事を返す、というような事が出来る。
 		messenger.callParentWithAsync(TEST_PARENT_DELAY);
-		
+
 		// 非同期ラッチ
 		try {
 			lock.await(4, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 		}
-		
-		//自分にひとつメッセージが届き、親に送り返している
+
+		// 自分にひとつメッセージが届き、親に送り返している
 		assertTrue("messenger not match	" + messenger.getLog().size(),
 				before + 3 == messenger.getLog().size());
 		globalLog = null;
 	}
-	
+
 	@Test
 	public void testCallWithAsyncDelay() {
 		globalLog = new ArrayList<String>();
-		
+
 		int before = messenger.getLog().size();
 		int beforeParent = parent.messenger.getLog().size();
-		
-		// 非同期の先のThreadでsleepすると、呼び元のThread != asyncを実行したThreadなため、非同期で抜けつつ、時間が来たら返事を返す、というような事が出来る
+
+		// 非同期の先のThreadでsleepすると、呼び元のThread !=
+		// asyncを実行したThreadなため、非同期で抜けつつ、時間が来たら返事を返す、というような事が出来る
 		parent.messenger.call(TEST_MESSENGER, TEST_DELAY);
-		
-		
+
 		// 非同期ラッチ
 		try {
 			lock.await(2, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 		}
-		
-		//親 s>r 子 s>r 親	各2つログが増加
+
+		// 親 s>r 子 s>r 親 各2つログが増加
 		assertTrue("messenger not match	" + messenger.getLog().size(),
 				before + 2 == messenger.getLog().size());
-		assertTrue(beforeParent+"	parent not match	" + parent.messenger.getLog().size(),
+		assertTrue(beforeParent + "	parent not match	"
+				+ parent.messenger.getLog().size(),
 				beforeParent + 2 == parent.messenger.getLog().size());
 		globalLog = null;
 	}
-	
-	
+
 	/**
-	 * 遅延実行2
-	 * 遅延を仕込んだあとで、同じMessengerを使用する
+	 * 遅延実行2 遅延を仕込んだあとで、同じMessengerを使用する
 	 */
 	@Test
 	public void testCallMyselfWithAsyncDelay2() {
 		globalLog = new ArrayList<String>();
-		
-		//非同期で抜ける
+
+		// 非同期で抜ける
 		messenger.callMyselfWithAsync(TEST_DELAY);
-		
-		//メッセージが送られる
+
+		// メッセージが送られる
 		messenger.callMyself(TEST_DELAY_AFTER);
-		
+
 		// 非同期ラッチ
 		try {
 			lock.await(2, TimeUnit.SECONDS);
-			
-			//このあたりで、TEST_DELAY内部のsleepが解除される
-			
-			//TEST_DELAYED_CALLPARENT発生
-			
-			//await終了
+
+			// このあたりで、TEST_DELAY内部のsleepが解除される
+
+			// TEST_DELAYED_CALLPARENT発生
+
+			// await終了
 		} catch (InterruptedException e) {
 		}
-		
-		//TEST_DELAY_AFTER | TEST_DELAY,	TEST_DELAY_AWAKE,	TEST_DELAYED_CALLPARENTの順でログが発生していないといけない
-		
-		//どちらが速いかは運
-		assertTrue((TEST_DELAY_AFTER.equals(globalLog.get(0)) && TEST_DELAY.equals(globalLog.get(1))) || 
-				(TEST_DELAY.equals(globalLog.get(0)) && TEST_DELAY_AFTER.equals(globalLog.get(1))));
-		
+
+		// TEST_DELAY_AFTER | TEST_DELAY, TEST_DELAY_AWAKE,
+		// TEST_DELAYED_CALLPARENTの順でログが発生していないといけない
+
+		// どちらが速いかは運
+		assertTrue((TEST_DELAY_AFTER.equals(globalLog.get(0)) && TEST_DELAY
+				.equals(globalLog.get(1)))
+				|| (TEST_DELAY.equals(globalLog.get(0)) && TEST_DELAY_AFTER
+						.equals(globalLog.get(1))));
+
 		assertEquals(TEST_DELAY_AWAKE, globalLog.get(2));
 		assertEquals(TEST_DELAYED_CALLPARENT, globalLog.get(3));
 		globalLog = null;
 	}
-	
+
 }

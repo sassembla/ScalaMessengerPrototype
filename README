@@ -47,16 +47,16 @@ Main -> Parent parent, named "parent"
 
 <Message-passing>
 parent
-	|--> child1
-	|	  |-->cousin
+	|<--> child1
+	|	  |<-->cousin
 	|
-	|--> child2
+	|<--> child2
 		
 
 直接接続している間柄のみ、メッセージパッシングでのオブジェクト送付が可能です。
-	○	parent	->	child1,child2
-	×	parent	->	cousin
-	○	child1	->	cousin
+	○	parent	<->	child1,child2
+	×	parent	<->	cousin
+	○	child1	<->	cousin
 
 
 

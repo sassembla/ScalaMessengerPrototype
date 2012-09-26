@@ -51,6 +51,16 @@ public class Child implements MessengerProtocol {
 		if (exec.equals("forward to grand'ma")) {
 			messenger.callParent("to grand'ma from cousin", tagValues);
 		}
+		
+		
+		//parentから、1秒後に起こせと言われた
+		if (exec.equals("please wake me up 1Sec later")) {
+			//1秒待ちます(この間別のMessagingを行っても問題なく動きます)
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {}
+			messenger.callParent("WAKE UP!", messenger.tagValue("childId", messenger.getMessengerID()));
+		}
 	}
 
 }
