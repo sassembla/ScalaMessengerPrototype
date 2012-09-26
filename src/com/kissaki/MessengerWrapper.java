@@ -151,7 +151,7 @@ public class MessengerWrapper {
 	
 	
 	/**
-	 * Object,int,String,booelan . array
+	 * Object,integer,String,boolean . array
 	 * @param tag
 	 * @param value
 	 * @return

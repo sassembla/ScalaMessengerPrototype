@@ -35,27 +35,40 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	String TEST_EXEC_CALLMYSELF = "TEST_EXEC_CALLMYSELF";
 	String TEST_EXEC_CALLPARENT = "TEST_EXEC_CALLPARENT";
 	String TEST_EXEC_CALLCHILD = "TEST_EXEC_CALLCHILD";
-	
+
 	String TEST_EXEC_CALLMYSELF_ASYNC = "TEST_EXEC_CALLMYSELF_ASYNC";
 	String TEST_EXEC_CALLPARENT_ASYNC = "TEST_EXEC_CALLPARENT_ASYNC";
 	String TEST_EXEC_CALLCHILD_ASYNC = "TEST_EXEC_CALLCHILD_ASYNC";
+
+	String TEST_EXEC_CALLMYSELF_ASYNC_NEST = "TEST_EXEC_CALLMYSELF_ASYNC_NEST";
+	String TEST_EXEC_CALLPARENT_ASYNC_NEST = "TEST_EXEC_CALLPARENT_ASYNC_NEST";
+	String TEST_EXEC_CALLCHILD_ASYNC_NEST = "TEST_EXEC_CALLCHILD_ASYNC_NEST";
+
+	String TEST_DELAY = "TEST_DELAY";
+	String TEST_PARENT_DELAY = "TEST_PARENT_DELAY";
+	String TEST_DELAY_AFTER = "TEST_DELAY_AFTER";
+	String TEST_DELAY_AWAKE = "TEST_DELAY_AWAKE";
+	String TEST_DELAYED_CALLPARENT = "TEST_DELAYED_CALLPARENT";
+	int TEST_DELAY_DURATION = 1000;
 	
+	ArrayList<String> globalLog;
 	
 	int TEST_TAGVALUE_NUM = 100;
 
 	public String identifier;
 
 	String TEST_SAMPLE = "TEST_SAMPLE";
-	
-	//非同期試験用
+
+	// 非同期試験用
 	private CountDownLatch lock = new CountDownLatch(1);
-	
 
 	MessengerWrapper messenger;
 	ParentObject parent;
 	SomeOtherObject someone;
 	private TagValue[] receiverResult = null;
 
+	
+	
 	public void println(String s) {
 		System.out.println(s);
 	}
@@ -65,7 +78,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		int rand = new Random().nextInt();
 		identifier = "rand_" + rand;
 
-		println("org identifier	" + identifier);
+		println("test identifier	" + identifier+"	/testName	"+this);
 
 		parent = new ParentObject(TEST_PARENT);
 		messenger = new MessengerWrapper(this, TEST_MESSENGER);
@@ -94,37 +107,89 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	public void receiver(String exec, TagValue[] tagValues) {
 		receiverResult = tagValues;
 		assertNotNull("should not null...", receiverResult);
-		
+
+		// myself-nest
 		if (exec.equals(TEST_EXEC_CALLMYSELF)) {
-			messenger.callMyself(TEST_EXEC_CALLMYSELF+1);
+			messenger.callMyself(TEST_EXEC_CALLMYSELF + 1);
 		}
 		if (exec.equals(TEST_EXEC_CALLMYSELF + 1)) {
-			messenger.callMyself(TEST_EXEC_CALLMYSELF+2);
+			messenger.callMyself(TEST_EXEC_CALLMYSELF + 2);
 		}
 		if (exec.equals(TEST_EXEC_CALLMYSELF + 2)) {
-			messenger.callMyself(TEST_EXEC_CALLMYSELF+3);
+			messenger.callMyself(TEST_EXEC_CALLMYSELF + 3);
 		}
 		if (exec.equals(TEST_EXEC_CALLMYSELF + 3)) {
-			messenger.callMyself(TEST_EXEC_CALLMYSELF+4);
+			messenger.callMyself(TEST_EXEC_CALLMYSELF + 4);
 		}
 		if (exec.equals(TEST_EXEC_CALLMYSELF + 4)) {
-			messenger.callMyself(TEST_EXEC_CALLMYSELF+5);
+			messenger.callMyself(TEST_EXEC_CALLMYSELF + 5);
 		}
-		if (exec.equals(TEST_EXEC_CALLMYSELF + 5)) {}
-		
-		
+		if (exec.equals(TEST_EXEC_CALLMYSELF + 5)) {
+		}
+
+		// child-parent-nest
 		if (exec.equals(TEST_EXEC_CALLCHILD)) {
-			messenger.callParent(TEST_EXEC_CALLPARENT+1);
+			messenger.callParent(TEST_EXEC_CALLPARENT + 1);
 		}
-		if (exec.equals(TEST_EXEC_CALLCHILD+1)) {
-			messenger.callParent(TEST_EXEC_CALLPARENT+2);
+		if (exec.equals(TEST_EXEC_CALLCHILD + 1)) {
+			messenger.callParent(TEST_EXEC_CALLPARENT + 2);
 		}
-		if (exec.equals(TEST_EXEC_CALLCHILD+2)) {
-			messenger.callParent(TEST_EXEC_CALLPARENT+3);
+		if (exec.equals(TEST_EXEC_CALLCHILD + 2)) {
+			messenger.callParent(TEST_EXEC_CALLPARENT + 3);
 		}
-		
+
+		// async-parent
 		if (exec.equals(TEST_EXEC_CALLCHILD_ASYNC)) {
 			println("TEST_EXEC_CALLCHILD_ASYNC");
+		}
+
+		// async-myself-nest
+		if (exec.equals(TEST_EXEC_CALLMYSELF_ASYNC_NEST)) {
+			messenger.callMyselfWithAsync(TEST_EXEC_CALLMYSELF_ASYNC_NEST + 1);
+		}
+		if (exec.equals(TEST_EXEC_CALLMYSELF_ASYNC_NEST + 1)) {
+			messenger.callMyselfWithAsync(TEST_EXEC_CALLMYSELF_ASYNC_NEST + 2);
+		}
+		if (exec.equals(TEST_EXEC_CALLMYSELF_ASYNC_NEST + 2)) {
+			messenger.callMyselfWithAsync(TEST_EXEC_CALLMYSELF_ASYNC_NEST + 3);
+		}
+		if (exec.equals(TEST_EXEC_CALLMYSELF_ASYNC_NEST + 3)) {
+			messenger.callMyselfWithAsync(TEST_EXEC_CALLMYSELF_ASYNC_NEST + 4);
+		}
+		if (exec.equals(TEST_EXEC_CALLMYSELF_ASYNC_NEST + 4)) {
+			messenger.callMyselfWithAsync(TEST_EXEC_CALLMYSELF_ASYNC_NEST + 5);
+		}
+		if (exec.equals(TEST_EXEC_CALLMYSELF_ASYNC_NEST + 5)) {
+		}
+
+		// async-child-parent-nest
+		if (exec.equals(TEST_EXEC_CALLCHILD_ASYNC_NEST)) {
+			messenger.callParentWithAsync(TEST_EXEC_CALLPARENT_ASYNC_NEST + 1);
+		}
+		if (exec.equals(TEST_EXEC_CALLCHILD_ASYNC_NEST + 1)) {
+			messenger.callParentWithAsync(TEST_EXEC_CALLPARENT_ASYNC_NEST + 2);
+		}
+		if (exec.equals(TEST_EXEC_CALLCHILD_ASYNC_NEST + 2)) {
+			messenger.callParentWithAsync(TEST_EXEC_CALLPARENT_ASYNC_NEST + 3);
+		}
+
+		// async-myself-delay
+		if (exec.equals(TEST_DELAY)) {
+			globalLog.add(TEST_DELAY);
+			
+			try {
+				Thread.sleep(TEST_DELAY_DURATION);
+			} catch (InterruptedException e) {
+				println("InterruptedException	"+e);
+			}
+			
+			globalLog.add(TEST_DELAY_AWAKE);
+			
+			messenger.callParent(TEST_DELAYED_CALLPARENT);
+		}
+		
+		if (exec.equals(TEST_DELAY_AFTER)) {
+			globalLog.add(TEST_DELAY_AFTER);
 		}
 	}
 
@@ -144,22 +209,56 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		public void receiver(String exec, TagValue[] tagValues) {
 			receiverResult = tagValues;
 			assertNotNull("should not null...", receiverResult);
-			
+			// parent-child
 			if (exec.equals(TEST_EXEC_CALLPARENT)) {
 				messenger.call(TEST_MESSENGER, TEST_EXEC_CALLCHILD);
 			}
-			if (exec.equals(TEST_EXEC_CALLPARENT+1)) {
-				messenger.call(TEST_MESSENGER, TEST_EXEC_CALLCHILD+1);
+			if (exec.equals(TEST_EXEC_CALLPARENT + 1)) {
+				messenger.call(TEST_MESSENGER, TEST_EXEC_CALLCHILD + 1);
 			}
-			if (exec.equals(TEST_EXEC_CALLPARENT+2)) {
-				messenger.call(TEST_MESSENGER, TEST_EXEC_CALLCHILD+2);
+			if (exec.equals(TEST_EXEC_CALLPARENT + 2)) {
+				messenger.call(TEST_MESSENGER, TEST_EXEC_CALLCHILD + 2);
 			}
-			if (exec.equals(TEST_EXEC_CALLPARENT+3)) {
-				messenger.call(TEST_MESSENGER, TEST_EXEC_CALLCHILD+3);
+			if (exec.equals(TEST_EXEC_CALLPARENT + 3)) {
+				messenger.call(TEST_MESSENGER, TEST_EXEC_CALLCHILD + 3);
 			}
-			
+
+			// async-child
 			if (exec.equals(TEST_EXEC_CALLPARENT_ASYNC)) {
 				println("TEST_EXEC_CALLPARENT_ASYNC");
+			}
+
+			// async-parent-child
+			if (exec.equals(TEST_EXEC_CALLPARENT_ASYNC_NEST)) {
+				messenger.callWithAsync(TEST_MESSENGER,
+						TEST_EXEC_CALLCHILD_ASYNC_NEST);
+			}
+			if (exec.equals(TEST_EXEC_CALLPARENT_ASYNC_NEST + 1)) {
+				messenger.callWithAsync(TEST_MESSENGER,
+						TEST_EXEC_CALLCHILD_ASYNC_NEST + 1);
+			}
+			if (exec.equals(TEST_EXEC_CALLPARENT_ASYNC_NEST + 2)) {
+				messenger.callWithAsync(TEST_MESSENGER,
+						TEST_EXEC_CALLCHILD_ASYNC_NEST + 2);
+			}
+			if (exec.equals(TEST_EXEC_CALLPARENT_ASYNC_NEST + 3)) {
+				messenger.callWithAsync(TEST_MESSENGER,
+						TEST_EXEC_CALLCHILD_ASYNC_NEST + 3);
+			}
+			
+			if (exec.equals(TEST_DELAYED_CALLPARENT)) {
+				globalLog.add(TEST_DELAYED_CALLPARENT);
+			}
+			
+			if (exec.equals(TEST_PARENT_DELAY)) {
+				
+				try {
+					Thread.sleep(TEST_DELAY_DURATION);
+				} catch (InterruptedException e) {
+					println("InterruptedException	"+e);
+				}
+				
+				messenger.call(TEST_MESSENGER, TEST_DELAY);
 			}
 		}
 	}
@@ -397,7 +496,6 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 		assertTrue((result1 && !result2) || (!result1 && result2));
 	}
 
-	
 	/**
 	 * 親は最大一人、複数の親を指定しようとするとエラー
 	 */
@@ -409,7 +507,7 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 				messenger.getMessengerName() + " aleady has parent that named "
 						+ messenger.getMessengerParentName()));
 	}
-	
+
 	/**
 	 * 存在しない親を指定するとエラー
 	 */
@@ -423,7 +521,6 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 						+ " is not exist. please check parent's name"));
 
 	}
-
 
 	/*
 	 * タグバリュー
@@ -608,105 +705,277 @@ public class ScalaMessengerTests extends TestCase implements MessengerProtocol {
 	 * 子どもがcloseするときに親からの解除
 	 */
 	@Test
-	public void testCloseAndRemoveFromParent () {
-		
+	public void testCloseAndRemoveFromParent() {
+
 		int childNum = parent.messenger.getChildNum();
-		
+
 		messenger.close();
-		
-		//一件子どもの数が減っている
+
+		// 一件子どもの数が減っている
 		assertTrue(childNum - 1 == parent.messenger.getChildNum());
 	}
-	
+
 	/**
 	 * 親がcloseするときに子どもからの解除
 	 */
 	@Test
-	public void testCloseAndRemoveFromChild () {
-		//まだ親が居る
+	public void testCloseAndRemoveFromChild() {
+		// まだ親が居る
 		assertTrue(messenger.hasParent());
-		
+
 		parent.messenger.close();
-		
-		//子どもは親が居ない
+
+		// 子どもは親が居ない
 		assertFalse(messenger.hasParent());
 	}
-	
-	
+
 	/*
-	 * ネストする回数が多いケース
-	 * myself child parentの3パターン x 3バリエーション x n層レイヤー
+	 * ネストする回数が多いケース myself child parentの3パターン x 3バリエーション x n層レイヤー
 	 */
 	/**
 	 * 自分自身
 	 */
 	@Test
 	public void testMultiBoundCallMyself() {
+		int logNum = messenger.getLog().size();
+
 		messenger.callMyself(TEST_EXEC_CALLMYSELF);
+
+		assertTrue("messenger not match	" + messenger.getLog().size(),
+				logNum + 12 == messenger.getLog().size());
 	}
-	
+
 	/**
 	 * 親→自分→親→、、、
 	 */
 	@Test
 	public void testMultiBoundCallParent_CallChild() {
+		int logNum = messenger.getLog().size();
+		int parentLogNum = parent.messenger.getLog().size();
+
 		messenger.callParent(TEST_EXEC_CALLPARENT);
+
+		assertTrue("messenger not match	" + messenger.getLog().size(),
+				logNum + 8 == messenger.getLog().size());
+		assertTrue("parent not match	" + parent.messenger.getLog().size(),
+				parentLogNum + 8 == messenger.getLog().size());
 	}
-	
-	
-	
+
 	/*
 	 * 非同期
 	 */
 	@Test
-	public void testCallWithAsync(){
+	public void testCallWithAsync() {
 		int logNum = messenger.getLog().size();
 		int parentLogNum = parent.messenger.getLog().size();
-		
-		parent.messenger.callWithAsync(TEST_MESSENGER, TEST_EXEC_CALLCHILD_ASYNC);
 
-		//非同期ラッチ
+		parent.messenger.callWithAsync(TEST_MESSENGER,
+				TEST_EXEC_CALLCHILD_ASYNC);
+
+		// 非同期ラッチ
 		try {
 			lock.await(1, TimeUnit.SECONDS);
-		} catch (InterruptedException e) {}
-		
+		} catch (InterruptedException e) {
+		}
+
 		assertTrue("messenger not match	" + messenger.getLog().size(),
 				logNum + 1 == messenger.getLog().size());
 		assertTrue("parent not match	" + parent.messenger.getLog().size(),
 				parentLogNum + 1 == parent.messenger.getLog().size());
 	}
-	
+
 	@Test
-	public void testCallMyselfWithAsync(){
+	public void testCallMyselfWithAsync() {
 		int logNum = messenger.getLog().size();
 		messenger.callMyselfWithAsync(TEST_EXEC_CALLMYSELF_ASYNC);
-		
-		//非同期ラッチ
+
+		// 非同期ラッチ
 		try {
 			lock.await(1, TimeUnit.SECONDS);
-		} catch (InterruptedException e) {}
-		
-		assertTrue("messenger not match	"+(logNum + 2)+" but " + messenger.getLog().size(),
-				logNum + 2 == messenger.getLog().size());
+		} catch (InterruptedException e) {
+		}
+
+		assertTrue("messenger not match	" + (logNum + 2) + " but "
+				+ messenger.getLog().size(), logNum + 2 == messenger.getLog()
+				.size());
 	}
-	
+
 	@Test
-	public void testCallParentWithAsync(){
+	public void testCallParentWithAsync() {
 		int logNum = messenger.getLog().size();
 		int parentLogNum = parent.messenger.getLog().size();
-		
+
 		messenger.callParentWithAsync(TEST_EXEC_CALLPARENT_ASYNC);
-		
-		//非同期ラッチ
+
+		// 非同期ラッチ
 		try {
 			lock.await(1, TimeUnit.SECONDS);
-		} catch (InterruptedException e) {}
-		
+		} catch (InterruptedException e) {
+		}
+
 		assertTrue("messenger not match	" + messenger.getLog().size(),
 				logNum + 1 == messenger.getLog().size());
 		assertTrue("parent not match	" + parent.messenger.getLog().size(),
 				parentLogNum + 1 == parent.messenger.getLog().size());
 	}
+
+	/*
+	 * 非同期系のネストする回数が多いケース myself child parentの3パターン x 3バリエーション x n層レイヤー
+	 */
+	/**
+	 * 自分自身
+	 */
+	@Test
+	public void testMultiBoundCallMyselfWithAsync() {
+		int logNum = messenger.getLog().size();
+
+		messenger.callMyselfWithAsync(TEST_EXEC_CALLMYSELF_ASYNC_NEST);
+		// 非同期ラッチ
+		try {
+			lock.await(1, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+		}
+
+		println("logNum	" + logNum);
+		assertTrue("messenger not match	" + messenger.getLog().size(),
+				logNum + 12 == messenger.getLog().size());
+	}
+
+	/**
+	 * 親→自分→親→、、、
+	 */
+	@Test
+	public void testMultiBoundCallParent_CallChildWithAsync() {
+		int logNum = messenger.getLog().size();
+		int parentLogNum = parent.messenger.getLog().size();
+
+		messenger.callParentWithAsync(TEST_EXEC_CALLPARENT_ASYNC_NEST);
+		// 非同期ラッチ
+		try {
+			lock.await(1, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+		}
+
+		println("logNum	" + logNum);
+		println("parentLogNum	" + parentLogNum);
+
+		assertTrue("messenger not match	" + messenger.getLog().size(),
+				logNum + 8 == messenger.getLog().size());
+		assertTrue("parent not match	" + parent.messenger.getLog().size(),
+				parentLogNum + 8 == parent.messenger.getLog().size());
+	}
+
 	
+	/**
+	 * 遅延実行
+	 * 
+	 * asyncの変則的な使い方、タイマー実行 値を参照で持つか、値で持つか、内容によってかなり動作に差が出る。
+	 */
+	@Test
+	public void testCallMyselfWithAsyncDelay() {
+		globalLog = new ArrayList<String>();
+		
+		int before = parent.messenger.getLog().size();
+		
+		// 非同期の先のThreadでsleepすると、非同期で抜けつつ、時間が来たら返事を返す、というような事が出来る。
+		messenger.callMyselfWithAsync(TEST_DELAY);
+		
+		// 非同期ラッチ
+		try {
+			lock.await(2, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+		}
+		
+		//親にひとつメッセージが届いている
+		assertTrue("parent not match	" + parent.messenger.getLog().size(),
+				before + 1 == parent.messenger.getLog().size());
+		globalLog = null;
+	}
+	
+	/**
+	 * 親から子への非同期遅延 > 子から親への非同期遅延
+	 */
+	@Test
+	public void testCallParentWithAsyncDelay() {
+		globalLog = new ArrayList<String>();
+		int before = messenger.getLog().size();
+		
+		// 非同期の先のThreadでsleepすると、非同期で抜けつつ、時間が来たら返事を返す、というような事が出来る。
+		messenger.callParentWithAsync(TEST_PARENT_DELAY);
+		
+		// 非同期ラッチ
+		try {
+			lock.await(4, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+		}
+		
+		//自分にひとつメッセージが届き、親に送り返している
+		assertTrue("messenger not match	" + messenger.getLog().size(),
+				before + 3 == messenger.getLog().size());
+		globalLog = null;
+	}
+	
+	@Test
+	public void testCallWithAsyncDelay() {
+		globalLog = new ArrayList<String>();
+		
+		int before = messenger.getLog().size();
+		int beforeParent = parent.messenger.getLog().size();
+		
+		// 非同期の先のThreadでsleepすると、呼び元のThread != asyncを実行したThreadなため、非同期で抜けつつ、時間が来たら返事を返す、というような事が出来る
+		parent.messenger.call(TEST_MESSENGER, TEST_DELAY);
+		
+		
+		// 非同期ラッチ
+		try {
+			lock.await(2, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+		}
+		
+		//親 s>r 子 s>r 親	各2つログが増加
+		assertTrue("messenger not match	" + messenger.getLog().size(),
+				before + 2 == messenger.getLog().size());
+		assertTrue(beforeParent+"	parent not match	" + parent.messenger.getLog().size(),
+				beforeParent + 2 == parent.messenger.getLog().size());
+		globalLog = null;
+	}
+	
+	
+	/**
+	 * 遅延実行2
+	 * 遅延を仕込んだあとで、同じMessengerを使用する
+	 */
+	@Test
+	public void testCallMyselfWithAsyncDelay2() {
+		globalLog = new ArrayList<String>();
+		
+		//非同期で抜ける
+		messenger.callMyselfWithAsync(TEST_DELAY);
+		
+		//メッセージが送られる
+		messenger.callMyself(TEST_DELAY_AFTER);
+		
+		// 非同期ラッチ
+		try {
+			lock.await(2, TimeUnit.SECONDS);
+			
+			//このあたりで、TEST_DELAY内部のsleepが解除される
+			
+			//TEST_DELAYED_CALLPARENT発生
+			
+			//await終了
+		} catch (InterruptedException e) {
+		}
+		
+		//TEST_DELAY_AFTER | TEST_DELAY,	TEST_DELAY_AWAKE,	TEST_DELAYED_CALLPARENTの順でログが発生していないといけない
+		
+		//どちらが速いかは運
+		assertTrue((TEST_DELAY_AFTER.equals(globalLog.get(0)) && TEST_DELAY.equals(globalLog.get(1))) || 
+				(TEST_DELAY.equals(globalLog.get(0)) && TEST_DELAY_AFTER.equals(globalLog.get(1))));
+		
+		assertEquals(TEST_DELAY_AWAKE, globalLog.get(2));
+		assertEquals(TEST_DELAYED_CALLPARENT, globalLog.get(3));
+		globalLog = null;
+	}
 	
 }
