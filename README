@@ -8,7 +8,7 @@ http://ja.wikipedia.org/wiki/アクターモデル
 滅び行くScalaのActors(~2.9.2)をベースにしています。
 ブランチakkanized にAkka版を用意中です。
 
-
+このライブラリは試作です。メンテとかはあまり期待しないでください。
 
 
 
@@ -136,3 +136,7 @@ messenger.inputParent("parent")
 		val something = messenger.get("tag", tagValues)
 	}
 
+
+
+★ライセンス：License
+ライセンスはMIT Licenseです。
